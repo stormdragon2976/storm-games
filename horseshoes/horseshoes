@@ -25,7 +25,7 @@ local playerName=$1
 local getCpuNameVariable=$2
 local continue="false"
 while [ "$continue" == "false" ] ; do
-local cpuName=$(shuf -n 1 -e "Alicia" "Alonzo" "Anthony" "Billy" "Cayden" "Dorothy" "Draken" "Dave" "Ember" "Jeremy" "Kendell" "Kyle" "Storm" "Tux")
+local cpuName=$(shuf -n 1 -e "Alicia" "Alonzo" "Anthony" "Billy" "Burt" "Cayden" "Dorothy" "Draken" "Dave" "Ember" "Jeremy" "Kendell" "Kyle" "Storm" "Tux")
 if [ "${playerName^}" != "${cpuName^}" ] ; then
 local continue="true"
 fi
@@ -145,6 +145,7 @@ fi
 playerCounter=1
 score[1]=0
 score[2]=0
+echo "${player[1]} verses ${player[2]}. Good luck!"
 while [ ${score[1]} -lt 15 -a ${score[2]} -lt 15 ] ; do
 msg=""
 echo "${player[$playerCounter]} is up to throw. Press any key to continue."
