@@ -80,7 +80,7 @@ elif [ $x -ge 50 ] ; then
 local stepper="--"
 fi
 let x$stepper
-play -nq synth 0.03 tri $(($x *50))&
+play --no-dither --single-threaded -nq synth 0.03 tri $(($x *50))&
 read -st 0.03 -n 1 continue
 done
 if [[ $__strength_bar_result ]] ; then
@@ -108,7 +108,7 @@ local rStepper="--"
 fi
 let lChan$lStepper
 let rChan$rStepper
-play -nq synth 0.05 tri 300 remix v0.$lChan v0.$rChan&
+play --no-dither --single-threaded -nq synth 0.05 tri 300 remix v0.$lChan v0.$rChan&
 read -st 0.05 -n 1 continue
 done
 if [ $lChan -ge 5 ] ; then
@@ -127,13 +127,19 @@ fi
 }
 
 check_dependancies rolldice
+if [ "$1" != "c" ] ; then
 read -n 1 -p "Would you like instructions? " answer
 echo
 if [ "${answer^}" == "Y" ] ; then
 show_instructions
 fi
+fi
 echo "Welcome to horseshoes."
+if [ "$1" != "c" ] ; then
 read -p "Player 1, please enter your name: " player[1]
+else
+player[1]="$(get_cpu_name)"
+fi
 if [[ "$1" =~ 2 ]] ; then
 read -p "Player 2, please enter your name: " player[2]
 vsCpu="false"
@@ -148,8 +154,8 @@ echo "${player[1]} verses ${player[2]}. Good luck!"
 while [ ${score[1]} -lt 15 -a ${score[2]} -lt 15 ] ; do
 msg=""
 echo "${player[$playerCounter]} is up to throw. Press any key to continue."
-if [ $playerCounter -eq 2 -a "$vsCpu" == "true" ] ; then
-sleep 0.7
+if [ $playerCounter -eq 2 -a "$vsCpu" == "true" -o "$1" == "c" ] ; then
+sleep 1.5
 echo
 distance=$(rolldice 2d10+30)
 direction=$(rolldice 2d4)
@@ -187,7 +193,7 @@ hitSound="miss"
 fi
 play_throw $distance $hitSound
 echo "$msg"
-echo "${player[$playerCounter]}'s score is ${score[$playerCounter]}."
+echo "score:  ${player[1]} ${score[1]} -- ${player[2]} ${score[2]}"
 echo
 if [ $playerCounter -eq 1 ] ; then
 playerCounter=2
