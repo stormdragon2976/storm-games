@@ -12,6 +12,8 @@ This tone is the direction indicator. You will want to throw the shoe when the t
 Press a key to throw the horse shoe and if you did everything right, you will get a ringer. A ringer is worth 3 points.
 If you did everything almost perfect, you will get 1 point. If you completely miss, you get no points.
 To play with 2 players, launch the program with the number 2 as the only argument. Without the 2, you will play verses the CPU.
+Launch the program with the letter c as the only argument to watch a computer verses computer match.
+To play expert mode, launch the program with the letter e as the only argument.
 the first person to 15 points wins the game.
 
 EOF
@@ -157,8 +159,13 @@ echo "${player[$playerCounter]} is up to throw. Press any key to continue."
 if [ $playerCounter -eq 2 -a "$vsCpu" == "true" -o "$1" == "c" ] ; then
 sleep 1.5
 echo
+if [ "$1" == "e" ] ; then
+distance=$(rolldice 1d10+35)
+direction=$(rolldice 1d3+3)
+else
 distance=$(rolldice 2d10+30)
 direction=$(rolldice 2d4)
+fi
 else
 read -sn 1 continue
 strength_bar distance
