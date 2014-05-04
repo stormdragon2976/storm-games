@@ -1,0 +1,204 @@
+#!/bin/bash
+
+show_instructions()
+{
+cat << EOF
+When it is your turn to throw, press a key to start the round.
+You will hear a tone that raises and lowers in pitch.
+This tone is the strength bar, the higher the tone the harder you throw the horseshoe.
+You don't want to throw it at max strength, because the you will throw the horseshoe too far.
+After you have pressed a key to select your strength, you will get another bar, this one a tone that moves from left to right.
+This tone is the direction indicator. You will want to throw the shoe when the tone is equal in both speakers, dead center.
+Press a key to throw the horse shoe and if you did everything right, you will get a ringer. A ringer is worth 3 points.
+If you did everything almost perfect, you will get 1 point. If you completely miss, you get no points.
+To play with 2 players, launch the program with the number 2 as the only argument. Without the 2, you will play verses the CPU.
+the first person to 15 points wins the game.
+
+EOF
+local continue
+read -n 1 -p "Press any key to continue. " continue
+}
+
+get_cpu_name()
+{
+local playerName=$1
+local getCpuNameVariable=$2
+local continue="false"
+while [ "$continue" == "false" ] ; do
+local cpuName=$(shuf -n 1 -e "Alicia" "Alonzo" "Anthony" "Billy" "Cayden" "Dorothy" "Draken" "Dave" "Ember" "Jeremy" "Kendell" "Kyle" "Storm" "Tux")
+if [ "${playerName^}" != "${cpuName^}" ] ; then
+local continue="true"
+fi
+done
+if [[ $getCpuNameVariable ]] ; then
+eval $getCpuNameVariable="'$cpuName'"
+else
+echo "$cpuName"
+fi
+}
+
+check_dependancies()
+{
+    if [[ $(bash --version | head -n 1 | cut -f 1 -d "." | tr -d "[:alpha:]") < "4" ]] ; then
+        echo "This game requires bash version 4 or higher. Earlier versions may not be able to successfully run this code."
+    fi
+    if ! hash sox &> /dev/null ; then
+        echo "The program sox is required but does not appear to be installed on your system. Please install sox and try again."
+        exit 1
+    fi
+    for i in $@ ; do
+        if ! hash $i &> /dev/null ; then
+            echo "The program $i is required but does not appear to be installed on your system. Please install $i and try
+again."
+            exit 1
+        fi
+    done
+}
+ 
+play_throw()
+{
+local distance=$1
+local hit=$2
+local i=0
+local j=$(($distance / 7))
+while [ $i -lt $j ] ; do
+play -qV0 sounds/throw.ogg norm -$i
+let i++
+done
+play -qV0 sounds/$hit.ogg
+}
+
+strength_bar()
+{
+local __strength_bar_result=$1
+#strength indicator, 1 is weakest, 50 is max power.
+local x=0
+local continue=""
+while [ -z "$continue" ] ; do
+if [ $x -le 1 ] ; then
+local stepper="++"
+elif [ $x -ge 50 ] ; then
+local stepper="--"
+fi
+let x$stepper
+play -nq synth 0.03 tri $(($x *50))&
+read -st 0.03 -n 1 continue
+done
+if [[ $__strength_bar_result ]] ; then
+eval $__strength_bar_result="'$x'"
+else
+echo "$x"
+fi
+}
+
+direction_bar()
+{
+local __direction_bar_result=$1
+#Direction indicator, 5 is center, less than 5 is left, more than 5 is right.
+local y=0
+local continue=""
+local lChan=10
+local rChan=0
+while [ -z "$continue" ] ; do
+if [ $lChan -ge 9 ] ; then
+local lStepper="--"
+local rStepper="++"
+elif [ $lChan -le 1 ] ; then
+local lStepper="++"
+local rStepper="--"
+fi
+let lChan$lStepper
+let rChan$rStepper
+play -nq synth 0.05 tri 300 remix v0.$lChan v0.$rChan&
+read -st 0.05 -n 1 continue
+done
+if [ $lChan -ge 5 ] ; then
+rChan=0
+lChan=$((10 - $lChan))
+fi
+if [ $rChan -gt 5 ] ; then
+lChan=0
+fi
+y=$(($lChan + $rChan))
+if [[ $__direction_bar_result ]] ; then
+eval $__direction_bar_result="'$y'"
+else
+echo "$y"
+fi
+}
+
+check_dependancies rolldice
+read -n 1 -p "Would you like instructions? " answer
+echo
+if [ "${answer^}" == "Y" ] ; then
+show_instructions
+fi
+echo "Welcome to horseshoes."
+read -p "Player 1, please enter your name: " player[1]
+if [[ "$1" =~ 2 ]] ; then
+read -p "Player 2, please enter your name: " player[2]
+vsCpu="false"
+else
+player[2]="$(get_cpu_name)"
+vsCpu="true"
+fi
+playerCounter=1
+score[1]=0
+score[2]=0
+while [ ${score[1]} -lt 15 -a ${score[2]} -lt 15 ] ; do
+msg=""
+echo "${player[$playerCounter]} is up to throw. Press any key to continue."
+if [ $playerCounter -eq 2 -a "$vsCpu" == "true" ] ; then
+sleep 0.7
+echo
+distance=$(rolldice 2d10+30)
+direction=$(rolldice 2d4)
+else
+read -sn 1 continue
+strength_bar distance
+direction_bar direction
+fi
+if [ $direction -ge 4 -a $direction -le 6 ] ; then
+if [ $distance -ge 39 -a $distance -le 41 ] ; then
+msg="${player[$playerCounter]} got a RINGER! 3 points!"
+score[$playerCounter]=$((${score[$playerCounter]} + 3))
+hitSound="ringer"
+elif [ $distance -gt 35 -a $distance -lt 45 ] ; then
+msg="${player[$playerCounter]} got 1 point."
+score[$playerCounter]=$((${score[$playerCounter]} + 1))
+hitSound="point"
+fi
+fi
+if [ $direction -gt 6 ] ; then
+msg="${player[$playerCounter]} threw off to the right. "
+hitSound="miss"
+fi
+if [ $direction -lt 4 ] ; then
+msg="${player[$playerCounter]} threw off to the left. "
+hitSound="miss"
+fi
+if [ $distance -le 35 ] ; then
+msg="${msg}${player[$playerCounter]} threw short."
+hitSound="miss"
+fi
+if [ $distance -ge 45 ] ; then
+msg="${msg}${player[$playerCounter]} threw long."
+hitSound="miss"
+fi
+play_throw $distance $hitSound
+echo "$msg"
+echo "${player[$playerCounter]}'s score is ${score[$playerCounter]}."
+echo
+if [ $playerCounter -eq 1 ] ; then
+playerCounter=2
+else
+playerCounter=1
+fi
+done
+if [ ${score[1]} -ge 15 ] ; then
+echo "${player[1]} wins with a score of ${score[1]} to ${score[2]}!"
+else
+echo "${player[2]} wins with a score of ${score[2]} to ${score[1]}!"
+fi
+play -qV0 sounds/win.ogg
+exit 0

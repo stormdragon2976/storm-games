@@ -1,0 +1,11 @@
+Numnastics
+Written by Storm Dragon
+released under the terms of the WTFPL http://wtfpl.net/
+
+Requirements
+sox
+bash version 4 or greater
+TTYtter (optional)
+
+Playing
+You are given a scrambled list of numbers from 1 to 9. Press the number you want to flip from, and that number, plus all the numbers after it will reverse. the object of the game is to get the numbers in the right order, 123456789, in as few tries as possible.

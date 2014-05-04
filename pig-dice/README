@@ -1,0 +1,13 @@
+pig-dice
+Written by Storm Dragon
+Released under the terms of the WTFPL http://wtfpl.net/
+
+Requirements
+rolldice
+sox
+bash version 4 or greater
+
+Playing
+To play verses the CPU just run ./pig-dice
+To play verses other people (not online) run ./pig-dice number where number is 2 or more.
+The object is to get to 100 before anyone else. if you roll a 1 though, you lose your score for that turn.

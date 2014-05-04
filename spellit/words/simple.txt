@@ -1,0 +1,3 @@
+cat:the cat says meow.
+car:I got a new car yesterday.
+dog:If that dog doesn't stop barking, I'm gonna put it in the microwave!

@@ -1,0 +1,10 @@
+soxsynth by Storm Dragon
+Released under the terms of the WTFPL http://wtfpl.net/
+
+Usage
+./soxsynth
+Provides 3 octaves of notes, z-,, a-k, and q-i. To play the sharp of a note, press and hold shift while playing the note.
+1-6 changes instrument, the default is guitar.
+! disables all effects, this is the default.
+@-$ changes effects. Each effect key toggles the effect on and off.
+To close, press control+c

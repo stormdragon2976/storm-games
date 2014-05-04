@@ -1,0 +1,5 @@
+Yahtzee by Storm Dragon
+Released under the terms of the WTFPL: http://wtfpl.net/
+
+Playing
+Each player gets up to 3 rolls of the dice. To select the dice to reroll, enter the number shown. For example, if you roll 1, 2, 4, 5 and 6, you can choose to reroll 1 and 6 by typing 16 or 61 or 1 6 or 6 1. To select no dice, just press enter. To select a slot on the score sheet, press the letter of the slot you want, s for small straight, l for large straight, 3 for 3s etc. To select 3 of a kind press #. To select four of a kind press $. Yahtzee is currently PVP only. You can play with one player, in solataire mode.

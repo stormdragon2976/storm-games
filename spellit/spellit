@@ -1,0 +1,85 @@
+#!/bin/bash
+
+speak_msg()
+{
+#Default voice en-us
+espeak -v en-us "$@" &> /dev/null
+}
+while [ "$continue" != "n" ] ; do
+#get file to use. 
+if [ -n "$1" ] ; then
+fileName="words/$1.txt"
+shift
+else
+clear
+echo "Please select a word list to use:"
+x=1
+for i in words/*.txt ; do
+echo "$x: $(basename "$i" | sed 's/.txt//g')"
+fileList[$x]="$(basename "$i" | sed 's/.txt//g')"
+let x++
+done
+echo "$x: Exit"
+fileList[$x]="Exit"
+read continue
+if [ "${fileList[$continue]}" == "Exit" ] ; then
+exit 0
+fi
+fileName="words/${fileList[$continue]}.txt"
+echo "$fileName selected. Press any key to begin."
+read x
+fi
+
+i=0
+missed=0
+correct=0
+points=0
+totalPoints=0
+x=0
+while read line ; do
+words[$x]="$line"
+let x++
+done < $fileName
+while [ $i -lt $x ] ; do
+if [ "$continue" == "q" ] ; then
+break
+fi
+clear
+word="$(echo "${words[$i]}" | cut -d : -f 1)"
+sentence="$(echo "${words[$i]}" | cut -d : -f 2- | cut -d \n -f 1-)"
+speak_msg "Can you spell the word $word?"
+totalPoints="$(echo "$points + 10 * ${#word}" | bc)"
+read continue
+while [ "${#continue}" == 1 ] ; do
+case $continue in
+"s")
+speak_msg "$sentence"
+read continue
+break
+;;
+*)
+break
+esac
+done
+if [ "$continue" == "$word" ] ;  then
+speak_msg "$(shuf -n 1 -e "Excellent" "Great" "Awesome")! you got it right!"
+play -qV0 "$(shuf -n 1 -e sounds/cheer*.ogg)"
+let correct++
+points="$(echo "$points + 10 * ${#word}" | bc)"
+else
+if [ "$continue" != "n" ] ; then
+speak_msg "Sorry, you got it wrong."
+let missed++
+fi
+fi
+let i++
+done
+speak_msg "Out of $i words you got $correct right and missed $missed. Your score is $points points out of $totalPoints possible points for this list."
+if [ $missed -eq 0 -a "$continue" != "q" ] ; then
+speak_msg "Great job!"
+fi
+speak_msg "Play again?"
+read -n 1 continue
+done
+clear
+exit 0

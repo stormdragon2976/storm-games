@@ -1,0 +1,103 @@
+#!/bin/bash
+
+#If there is more than one command line arg something is wrong
+if [ $# -gt 1 ] ; then
+echo "usage:
+$0 godname"
+exit 1
+fi
+
+#set godName variable if it was passed from the command line
+if [ $# -eq 1 ] ; then
+godName="$1"
+fi
+
+#read from file if it exists, and name wasn't passed in on command line
+if [ -f .godville-trackerrc -a $# -eq 0 ] ; then
+source .godville-trackerrc
+fi
+
+#if name is not set in file, prompt for it here
+if [ -z "$godName" ] ; then
+read -p "Please enter the god's name? " godName
+fi
+
+#Counter variable initialization
+i=60
+#main update loop
+while [ "${continue^}" != "Q" ] ; do
+#Update info every minute
+if [ $i -ge 60 ] ; then
+godvilleInfo="$(curl -Ss "http://godvillegame.com/gods/api/${godName}.json")"
+#godvilleInfo="$(cat tmp.txt)"
+clear
+#remove most of the json stuff, and other formatting goodness
+godvilleInfo="$(echo "$godvilleInfo" | sed -e 's/":"/ /g' -e 's/","/\n/g')"
+godvilleInfo="$(echo "$godvilleInfo" | sed -e 's/":/ /g' -e 's/,"/\n/g')"
+godvilleInfo="$(echo "$godvilleInfo" | sed -e 's/{"//g' -e 's/"}//g' -e 's/}}//g' -e 's/\\u201[c|d]/"/g')"
+#load info into variables
+alignment="$(echo "$godvilleInfo" | grep "^alignment" | cut -d ' ' -f2-)"
+bricks_cnt="$(echo "$godvilleInfo" | grep "^bricks_cnt" | cut -d ' ' -f2-)"
+bricks_cnt=$(echo "scale=1;$bricks_cnt * 0.1" | bc)
+clan="$(echo "$godvilleInfo" | grep "^clan " | cut -d ' ' -f2-)"
+clan_position="$(echo "$godvilleInfo" | grep "^clan_position" | cut -d ' ' -f2-)"
+gender="$(echo "$godvilleInfo" | grep "^gender" | cut -d ' ' -f2-)"
+gold_approx="$(echo "$godvilleInfo" | grep "^gold_approx" | cut -d ' ' -f2-)"
+inventory="$(echo "$godvilleInfo" | grep "^inventory " | cut -d ' ' -f2-)"
+inventory_max_num="$(echo "$godvilleInfo" | grep "^inventory_max_num" | cut -d ' ' -f2-)"
+level="$(echo "$godvilleInfo" | grep "^level" | cut -d ' ' -f2-)"
+name="$(echo "$godvilleInfo" | grep "^name" | cut -d ' ' -f2-)"
+max_health="$(echo "$godvilleInfo" | grep "^max_health" | cut -d ' ' -f2-)"
+motto="$(echo "$godvilleInfo" | grep "^motto" | cut -d ' ' -f2-)"
+pet_class="$(echo "$godvilleInfo" | grep "^pet_class" | cut -d ' ' -f2-)"
+pet_level="$(echo "$godvilleInfo" | grep "^pet_level" | cut -d ' ' -f2-)"
+pet_name="$(echo "$godvilleInfo" | grep "^pet pet_name" | cut -d ' ' -f3-)"
+quest="$(echo "$godvilleInfo" | grep "^quest" | cut -d ' ' -f2-)"
+temple_completed_at="$(echo "$godvilleInfo" | grep "^temple_completed_at" | cut -d ' ' -f2-)"
+if [ "$temple_completed_at" != "null" ] ; then
+temple_completed_at="$(date --date="$temple_completed_at" +'%I:%M%p %A, %B %d, %Y')"
+fi
+
+#display Information
+echo "God
+Name:               $godName
+
+Hero
+Name:               $name ($gender)
+Motto:              $motto
+Personality:        $alignment"
+#Not everyone is in a clan:
+if [ -n "$clan" ] ; then
+echo "Guild:              $clan ($clan_position)"
+fi
+echo "Level:              $level
+Inventory:          ### / $inventory_max_num
+Health:             ### / $max_health
+Quest:              $quest
+Gold:               $gold_approx
+Bricks for Temple:  $bricks_cnt%"
+#Not everyone has completed their temple
+if [ "$temple_completed_at" != "null" ] ; then
+echo "Temple Completed:   $temple_completed_at"
+fi
+#Not everyone has a pet
+if [ -n "$pet_name" ] ; then
+echo
+echo "Pet
+Name:              $pet_name
+Class              $pet_class"
+#Not all pets show a level
+if [[ "$pet_level" =~ ^[0-9]+$ ]] ; then
+echo "Level:             $pet_level"
+fi
+fi
+#reset counter variable
+i=0
+fi
+#Wait for user input and sleep for 1 second
+read -t1 -n1 continue
+#Incriment counter
+let i++
+done
+echo
+exit 0

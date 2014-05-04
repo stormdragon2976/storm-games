@@ -1,0 +1,383 @@
+#!/bin/bash
+
+initializer()
+{
+    #Make sure number of players is a number.
+    if ! [[ $1 =~ ^[1-9]+$ ]] ; then
+        echo "Usage: yahtzee or yahtzee number of players."
+    fi
+    #creates the initial player variables for all the players
+    genIndex=1
+    while [ $genIndex -le $1 ] ; do
+        player[$genIndex]="false"
+        i=0
+        while [ $i -lt 12 ] ; do
+            player[$genIndex]="${player[$genIndex]}:false"
+            let i++
+        done
+        let genIndex++
+    done
+    #Randomly pick which player goes first.
+    if [ $1 -gt 1 ] ; then
+        playerIndex=$(rolldice 1d$1 | tr -d "[:space:]")
+    else
+        playerIndex=1
+    fi
+}
+
+roll()
+{
+    clear
+    unset diceSoundString
+    #Only play the number of dice rolls we are actually rolling.
+    i=0
+    while [ $i -lt $1 ] ; do
+        diceSoundString="$diceSoundString sounds/die$(rolldice 1d2 | tr -d "[:space:]").ogg"
+        let i++
+    done
+    #if there is only one die the -m (mix) option is not needed.
+    if [ $i -eq 1 ] ; then
+        play -qV0 $diceSoundString remix v0.$(rolldice 1d4+4) v0.$(rolldice 1d4+4)
+    else
+        play -mqV0 $diceSoundString remix v0.$(rolldice 1d4+4) v0.$(rolldice 1d4+4)
+    fi
+    echo "Player $playerIndex rolls $1 $(if [ $1 -gt 1 ] ; then echo "dice";else echo "die";fi)."
+    #if 5 dice are needed then replace the whole dice variable, if not, only replace the rolled dice.
+    if [  $1 -lt 5 ] ;then
+        dice="$dice $(rolldice ${1}x6 | tr -s " ")"
+    else
+        dice="$(rolldice 5x6 | tr -s " ")"
+    fi
+    #remove extra spaces from the dice string.
+    dice="$(echo "$dice" | tr -s "[:space:]")"
+    #Only show the rolled dice.
+    echo "${dice:$((${#dice} - $1 * 2)):${#dice}}." | rev | sed -e 's/^. /./' -e 's/ / ,/g' -e 's/ ,/ dna /' | rev
+}
+
+score_sheet()
+{
+    display="true"
+    double="false"
+    tripple="false"
+    #Initialize the score sheet to all 0s.
+    i=1
+    while [ $i -le 13 ] ; do
+        score[$i]=0
+        let i++
+    done
+    #Draw upper line of score sheet.
+    line=1
+    echo -n "|"
+    while [ $line -lt 29 ] ; do
+        echo -n "-"
+        let line++
+    done
+    echo "|"
+    #dice total is needed for scoring chance, small straight and large straight.
+    diceTotal="$(echo "$dice" | sed -e 's/^ //' -e 's/ $//' | tr " " "+")"
+    diceTotal=$(($diceTotal))
+    #set the chance section.
+    score[9]=$diceTotal
+    #Check for straights.
+    straight=$(echo "$dice" | tr " " "\n" | sort | tr -d "\n" | tr -s "[:digit:]")
+    if [ $straight -eq 1234 -o $straight -eq 2345 -o $straight -eq 3456 ] ; then
+        #We have a small straight.
+        score[12]=30
+    fi
+    if [ $straight -eq 12345 -o $straight -eq 23456 ] ; then
+        #We have a large straight, which automatically means we have a small straight as well.
+        score[11]=40
+        score[12]=30
+    fi
+    #check how many of each die there is.
+    i=1
+    while [ $i -le 13 ] ; do
+        x="$(echo "$dice" | grep $i | tr -Cd "$i " | tr -s " " | sed -e 's/^ //' -e 's/ $//' | tr " " "+")"
+        #Check for yahtzee
+        if [ "$x" = "${i}+${i}+${i}+${i}+${i}" ] ; then
+            if [[ "$(echo "${player[$1]}" | cut -d ":" -f 13)" == "50" ]] ; then
+                #More than 1 yahtzee is 100 points.
+                score[13]=100
+            else
+                #First yahtzee is 50 points.
+                score[13]=50
+            fi
+        fi
+    #set the dice score for each set of pips.
+    if [ "$x" != "" ] ; then
+        score[$i]=$(($x))
+    fi
+    #First part of check for full house, 2 of a kind + 3 of a kind.
+    if [ $((2 * $i)) -eq ${score[$i]} ] ; then
+        double="true"
+        if [ "$tripple" == "true" ] ; then
+            score[10]=25
+        fi
+    fi
+    #check for 3 of a kind as well as the second check for full house.
+    if [ $((3 * $i)) -eq ${score[$i]} ] ; then
+        tripple="true"
+        if [ "$double" == "true" ] ; then
+            score[10]=25
+        fi
+        score[7]=$diceTotal
+    fi
+    #Check for 4 of a kind, which automatically means there is 3 of a kind too.
+    if [ $((4 * $i)) -eq ${score[$i]} ] ; then
+        score[7]=$diceTotal
+        score[8]=$diceTotal
+    fi
+    case $i in
+        7)
+        #Draw section seperation line in score sheet.
+        line=1
+        echo -n "|"
+        while [ $line -lt 29 ] ; do
+            echo -n "-"
+            let line++
+        done
+        echo "|"
+        #Only display the option if it has not already been scored.
+        if [[ "$(echo "${player[$1]}" | cut -f $i -d ":")" == "false" ]] ; then
+            echo -n "|    3 of a kind         "
+            display="true"
+        else
+            display="false"
+        fi
+        ;;
+        8)
+        if [[ "$(echo "${player[$1]}" | cut -f $i -d ":")" == "false" ]] ; then
+            echo -n "|    4 of a kind         "
+            display="true"
+        else
+            display="false"
+        fi
+        ;;
+        9)
+        if [[ "$(echo "${player[$1]}" | cut -f $i -d ":")" == "false" ]] ; then
+            echo -n "|    Chance              "
+            display="true"
+        else
+            display="false"
+        fi
+        ;;
+        10)
+        if [[ "$(echo "${player[$1]}" | cut -f $i -d ":")" == "false" ]] ; then
+            echo -n "|    Full house          "
+            display="true"
+        else
+            display="false"
+        fi
+        ;;
+        11)
+        if [[ "$(echo "${player[$1]}" | cut -f $i -d ":")" == "false" ]] ; then
+            echo -n "|    Large straight      "
+            display="true"
+        else
+            display="false"
+        fi
+        ;;
+        12)
+        if [[ "$(echo "${player[$1]}" | cut -f $i -d ":")" == "false" ]] ; then
+            echo -n "|    Small straight      "
+            display="true"
+        else
+            display="false"
+        fi
+        ;;
+        13)
+        if [[ "$(echo "${player[$1]}" | cut -f $i -d ":")" != "0" ]] ; then
+            echo -n "|    Yahtzee             "
+            display="true"
+        else
+            display="false"
+        fi
+        ;;
+        *)
+        if [[ "$(echo "${player[$1]}" | cut -f $i -d ":")" == "false" ]] ; then
+            echo -n "|    ${i}s               "
+            display="true"
+        else
+            display="false"
+        fi
+    esac
+    #Only display the score if the first half is displayed.
+    if [ "$display" == "true" ] ; then
+        #Format the score so the right side of the box lines up.
+        if [ ${score[$i]} -lt 10 ] ; then
+            echo "${score[$i]}   |"
+        elif [ ${score[$i]} -ge 100 ] ; then
+            echo "${score[$i]} |"
+        else
+            echo "${score[$i]}  |"
+        fi
+    fi
+    let i++
+    done
+    #Draw the bottom of the score sheet.
+    line=1
+    echo -n "|"
+    while [ $line -lt 29 ] ; do
+        echo -n "_"
+        let line++
+    done
+    echo "|"
+}
+
+dice_parser()
+{
+    error="true"
+    while [ "$error" == "true" ] ; do
+        #Remove spaces from the reroll string.
+        continue="$(echo "$continue" | tr -d "[:space:]")"
+        #Make sure the reroll string contains valid dice options.
+        if ! [[ "$continue" =~ ^[1-6]+$ ]] ; then
+            error="true"
+            echo -n "Dice must be numbers 1-6 only. "
+        else
+            error="false"
+        fi
+        #Make sure the requested dice are actually available to reroll.
+        if [[ $(echo "$dice" | tr -d "$continue") == "$dice" ]] ; then
+            if [ "$error" == "false" ] ; then
+                error="true"
+                unset continue
+                echo -n "That is not one of the available dice to reroll. "
+            fi
+        else
+            error="false"
+        fi
+        #Only oporate on the dice string if there are no errors.
+        if [ "$error" == "false" ] ; then
+            i=0
+            while [ $i -lt ${#continue} ] ; do
+                #Remove all the selected dice from the dice string.
+                dice=$(echo "$dice" | sed "s/${continue:$i:1} //")
+                let i++
+            done
+        else
+            #Play error sound.
+            play -qV0 "|sox -n -p synth saw E2 fade 0 0.25 0.05" "|sox -n -p synth saw E2 fade 0 0.25 0.05" norm -7
+        fi
+        #Set the number of dice that need to be rerolled.
+        dieCounter=$((5 - ${#dice} / 2))
+        if [ "$error" == "true" ] ; then
+            read continue
+        fi
+    done
+}
+
+score_dice()
+{
+    error="true"
+    while [ "$error" == "true" ] ; do
+        read -n 1 -p "Select score slot. " continue
+        case "${continue^}" in
+        [1-6])
+            #scoring for slots 1-6.
+            fieldIndex=$continue
+        ;;
+        #3 of a kind.
+        "#")
+            fieldIndex=7
+        ;;
+        #4 of a kind.
+        "$")
+            fieldIndex=8
+        ;;
+        #Chance.
+        "C")
+            fieldIndex=9
+        ;;
+        #Full house.
+        "F")
+            fieldIndex=10
+        ;;
+        #Large straight.
+        "L")
+            fieldIndex=11
+        ;;
+        #Small straight.
+        "S")
+            fieldIndex=12
+        ;;
+        #Yahtzee
+        "Y")
+            fieldIndex=13
+        ;;
+        *)
+            unset fieldIndex
+        esac
+        #Make sure the key press was valid.
+        if [ "$fieldIndex" != "" ] ; then
+            #make sure the selected slot hasn't already been scored.
+            if [[ $(echo "${player[$1]}" | cut -d ":" -f $fieldIndex) != "false" ]] ; then
+                play -qV0 "|sox -n -p synth saw E2 fade 0 0.25 0.05" "|sox -n -p synth saw E2 fade 0 0.25 0.05" norm -7
+                error="true"
+                echo -e "\nThat is not a valid scoring option."
+            else
+                error="false"
+            fi
+        else
+            error="true"
+        fi
+    done
+    #Set the score in the player variable.
+    player[$1]="$(echo "${player[$1]}" | sed 's/:/\n/g' | sed -e $fieldIndex"s/false/${score[$fieldIndex]}/" | tr "\n" ":" | sed 's/:$//')"
+    playerScore="$(echo "${player[$1]}" | tr -d "[:alpha:]" | tr -s ":" | tr ":" "+" | sed -e 's/^\+//' -e 's/\+$//')"
+    echo
+    read -t 3 -n 1 -p "Player $1's score is $(($playerScore))." continue
+}
+
+if [ $# -eq 1 ] ; then
+    initializer $1
+    totalPlayers="$1"
+else
+    initializer 1
+    totalPlayers=1
+fi
+#If the word false is in any player varaible the game is not over.
+while [[ $(echo "${player[@]}" | grep "false") ]] ; do
+    rollCounter=0
+    dieCounter=5
+    continue="true"
+    #Each player gets up to 3 rolls.
+    while [ $rollCounter -lt 3 ] ; do
+        if [ "$continue" != "" ] ; then
+            roll $dieCounter
+        else
+            break
+        fi
+        #show the score sheet after each roll.
+        score_sheet $playerIndex
+        let rollCounter++
+        if [ $rollCounter -lt 3 ] ; then
+            read -p "Enter the dice you would like to reroll or enter to keep all the dice." continue
+            if [ "$continue" != "" ] ; then
+                dice_parser $playerIndex
+            fi
+        fi
+    done
+    score_dice $playerIndex
+if [ $playerIndex -ge $totalPlayers ] ; then
+    playerIndex=1
+else
+    let playerIndex++
+fi
+done
+#show who won the game.
+i=1
+winningScore=0
+winner=1
+while [ $i -le $totalPlayers ] ; do
+    playerScore="$(echo "${player[$i]}" | tr -d "[:alpha:]" | tr -s ":" | tr ":" "+" | sed -e 's/^\+//' -e 's/\+$//')"
+    playerScore=$(($playerScore))
+    if [ $playerScore -gt $winningScore ] ; then
+        winningScore=$playerScore
+        winner=$i
+    fi
+    let i++
+done
+echo
+echo "Player $winner wins!!!"
+exit 0

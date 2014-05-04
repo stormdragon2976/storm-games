@@ -1,0 +1,218 @@
+#!/bin/bash
+
+#Play sounds
+play_sound()
+{
+#terrainSound=$(shuf -n 1 -e "sounds/$1"*.ogg)
+play -mqV0 "$(shuf -n 1 -e "sounds/$1"*.ogg)" "$(shuf -n 1 -e "sounds/$amo/fire"*.ogg)"
+}
+
+#Initialize variables and screen
+initializer()
+{
+#plot course on first load
+if [ -z "$firstLoad" ] ; then
+clear
+#seed random number with /dev/random
+RANDOM=$(od -An -N2 -i /dev/random)
+echo -e "Welcome to Critter Cannon\n\nCreating course, please wait..."
+i=0
+while [ $i -le 1500 ] ; do
+feet[$i]="$(shuf -n 1 -e "a stick of dynamite" "the ground" "a trampoline" "spikes" "the ground" "a venus flytrap" "the ground" "an electric fence" "the ground")"
+let i++
+done
+fi
+i=1
+for x in sounds/* ; do
+if [ -d "$x" ] ; then
+amoList[$i]="$x"
+if [ $i -lt 10 ] ; then
+echo -n "0"
+fi
+echo "$i: $(echo "$x" | rev | cut -d / -f 1 | rev)"
+let i++
+fi
+done
+read -p "Select your amo: " amo
+if ! [[ "$amo" =~ ^[0-9]+$ ]] ; then
+amo=1
+fi
+if [ $amo -lt 1 -o $amo -gt $i ] ; then
+amo=1
+fi
+amo="$(echo ${amoList[$amo]} | sed 's/sounds\///g')"
+if [ -f "sounds/$amo/sex" ] ; then
+sex="$(cat "sounds/$amo/sex" | tr -d "[:space:]")"
+else
+sex="it"
+fi
+echo "You $(shuf -n 1 -e "shove" "push" "jam") a $(shuf -n 1 -e "kick" "claw" "bit")ing and $(shuf -n 1 -e "scream" "snarl")ing $amo into the cannon and prepare to fire..."
+read -p "Set the altitude of the cannon in degrees from 90 which is paralell to the ground, to 180 which is straight up. " aim
+if ! [[ "$aim" =~ ^[0-9]+$ ]] ; then
+aim=90
+fi
+if [ $aim -lt 90 -a $aim -gt 180 ] ; then
+aim=90
+fi
+read -p "Enter the number of grains of black powder to use from 10 to 25. " amoDistance
+if ! [[ "$amoDistance" =~ ^[0-9]+$ ]] ; then
+amoDistance=10
+fi
+if [ $amoDistance -lt 10 -a $amoDistance -gt 25 ] ; then
+amoDistance=10
+fi
+amoDistance=$(echo "$amoDistance / 3" | bc)
+amoHeight=$(echo "$aim / 2" | bc)
+#Distance bonus if cannon aim is less than 120
+if [ $aim -lt 120 ] ; then
+amoDistance=$(echo "$amoDistance + ($RANDOM % 15)" | bc)
+else
+amoHeight=$(echo "$amoHeight + ($RANDOM % 15)" | bc)
+fi
+distance=0
+dynamite=0
+ground=0
+trampoline=0
+points=0
+firstLoad=true
+}
+
+high_score()
+{
+newHighScore=0
+i=1
+if [ ! -f ".scoreboard" ] ; then
+newHighScore=1
+while [ $i -le 10 ] ; do
+score[$i]="0 anonymous"
+let i++
+done
+else
+while IFS=$'\n' read line ; do
+score[$i]="$line"
+oldScore=$(echo "${score[$i]}" | cut -d ' ' -f 1)
+if [ $1 -gt $oldScore -a $newHighScore == 0 ] ; then
+newHighScore=$i
+fi
+let i++
+done < .scoreboard
+fi
+if [ $newHighScore -gt 0 ] ; then
+continue="n"
+echo "Congratulations! You beat the score at position $newHighScore!"
+while [ "${continue^}" != "Y" ] ; do
+read -p "Enter your name: " name
+if [ -z "$name" ] ; then
+name="Anonymous"
+fi
+read -n 1 -p "is $name correct? " continue
+done
+if [ $newHighScore -eq 1 ] ; then
+read -n 1 -p "Post this score using TTYtter? " continue
+if [ "${continue^}" == "Y" ] ; then
+ttytter -readline=0 -silent -status="I just shot a $amo $distance feet and now hold the 1st place position on my local scoreboard! #CritterCannon" &> /dev/null&
+echo "Score posted."
+fi
+fi
+i=11
+while [ $i -gt $newHighScore ] ; do
+score[$i]="${score[$(echo "$i - 1" | bc)]}"
+let i--
+done
+name="$(echo "${name^}" | tr " " "_")"
+score[$newHighScore]="$1 $name"
+i=1
+scoreBoard=""
+while [ $i -le 10 ] ; do
+scoreBoard="${scoreBoard}${score[$i]}\n"
+let i++
+done
+echo -e "${scoreBoard:0:-2}" > .scoreboard
+fi
+}
+
+while [ "$continue" != "q" ] ; do
+initializer
+ read -n 1 -p "press any key to fire the cannon." continue
+clear
+play_sound cannon
+continue=true
+while [ $continue ] ; do
+while [ $amoHeight -gt 0 ] ; do
+distance=$(echo "$distance + $amoDistance" | bc)
+amoHeight=$(echo "$amoHeight - 5" | bc)
+if [ $amoDistance -gt 1 ] ; then
+let amoDistance--
+fi
+if [ $distance -gt 1500 ] ; then
+distance=$(echo "$RANDOM % 1500 + 1400" | bc)
+fi
+done
+points=$(echo "$points + $distance * 100" | bc)
+echo "A $amo $(shuf -n 1 -e "thuds" "crashes" "smashes" "crunches") down on to ${feet[$distance]}."
+lastTerrain="${feet[$distance]}"
+play_sound "${feet[$distance]}"
+case "${feet[$distance]}" in
+"a stick of dynamite")
+let dynamite++
+amoDistance=$(echo "$amoDistance + ($RANDOM % 15)" | bc)
+amoHeight=$(echo "$RANDOM % 90 + 30" | bc)
+if [ "$lastTerrain" == "a stick of dynamite" ] ; then
+amoHeight=$(echo "$amoHeight * 2" | bc)
+amoDistance=$(echo "$amoDistance * 2" | bc)
+fi
+points=$(echo "$points + 1000" | bc)
+;;
+"a trampoline")
+let trampoline++
+amoDistance=$(echo "$amoDistance + ($RANDOM % 5)" | bc)
+amoHeight=$(echo "$RANDOM % 100 + 50" | bc)
+if [ "$lastTerrain" == "a trampoline" ] ; then
+amoHeight=$(echo "$amoHeight * 2" | bc)
+amoDistance=$(echo "$amoDistance * 2" | bc)
+fi
+points=$(echo "$points + 500" | bc)
+;;
+"the ground")
+let ground++
+let amoDistance++
+amoHeight=$(echo "$RANDOM % 4 + 1" | bc)
+points=$(echo "$points + 25" | bc)
+;;
+*)
+break
+esac
+done
+echo "You shot a $amo $distance feet. "
+if [ $dynamite -ne 1 ] ; then
+echo -n "The $amo hit $dynamite sticks of dynamite, "
+else
+echo -n "The $amo hit $dynamite stick of dynamite, "
+fi
+if [ $ground -ne 1 ] ; then
+echo -n "landed on the ground $ground times, "
+else
+echo -n "landed on the ground $ground time, "
+fi
+echo -n "and "
+if [ $trampoline -ne 1 ] ; then
+echo "bounced on $trampoline trampolines."
+else
+echo "bounced on $trampoline trampoline."
+fi
+echo "The $amo	was killed when $sex landed on $lastTerrain."
+echo "Your score for this shot was $points points."
+high_score $distance
+echo -e "\nHigh Scores"
+i=1
+while [ $i -le 10 ] ; do
+if [ $i -lt 10 ] ; then
+echo -n "0"
+fi
+echo "$i .......... $(echo "${score[$i]}" | sed 's/ / feet .......... /' | sed 's/_/ /g')"
+let i++
+done
+read -n 1 -p "Press q to quit or any other key to play again: " continue
+echo ""
+done
+exit 0

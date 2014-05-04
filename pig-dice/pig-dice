@@ -1,0 +1,112 @@
+#!/bin/bash
+
+check_dependancies()
+{
+    if [ $# -eq 0 ] ; then
+        if [[ $(bash --version | head -n 1 | cut -f 1 -d "." | tr -d "[:alpha:]") < "4" ]] ; then
+            echo "This game requires bash version 4 or higher. Earlier versions may not be able to successfully run this code."
+        fi
+        if ! hash sox &> /dev/null ; then
+            echo "The program sox is required but does not appear to be installed on your system. Please install sox and try
+again."
+            exit 1
+        fi
+    fi
+    for i in $@ ; do
+        if ! hash $i &> /dev/null ; then
+            echo "The program $i is required but does not appear to be installed on your system. Please install $i and try
+again."
+            exit 1
+        fi
+    done
+}
+
+initialize_players()
+{
+    i=1
+    while [ $i -le $1 ] ; do
+        player[$i]=0
+        let i++
+    done
+}
+
+score_keeper()
+{
+    #Initialize currentScore for the player to 0
+    currentScore=0
+    #clear the continue variable
+    unset continue
+    #Show current player
+    i=1
+    while [ $i -lt $columns ] ; do
+        echo -n "-"
+        let i++
+    done
+    echo "-"
+    echo "It is player $1's turn. Player $1 has ${player[$1]} total points."
+    #while the die roll is not 1 keep rolling and keep track of the score
+    while [ "${continue^}" != "Q" ] ; do
+        dieRoll=$(rolldice 1)
+        play -qV0 "sounds/die.ogg" remix v0.$(rolldice 1d4+4) v0.$(rolldice 1d4+4)
+        echo -n "player $1 rolled a $dieRoll "
+        if [ $dieRoll -ne 1 ] ; then
+            currentScore=$(echo "$currentScore + $dieRoll" | bc)
+            echo "for a score of $currentScore."
+            if [ $1 -eq 2 -a "$cpu" == "true" ] ; then
+                continue="$(shuf -n 1 -e "q" "a" "b" "c" "d")"
+            else
+                read -n 1 -p "Press any key to roll again or q to stop and bank your current score." continue
+            fi
+            echo
+        else
+            echo "and loses their score of $currentScore."
+            play -qV0 sounds/lose.ogg
+            currentScore=0
+            continue="q"
+        fi
+        if [ "${continue^}" == "Q" -o $currentScore -eq 0 ] ; then
+            player[$1]=$(echo "${player[$1]} + $currentScore" | bc)
+            echo "player $1's turn is over. Player $1's new score is ${player[$1]}."
+        fi
+        if [ ${player[$1]} -ge 100 ] ; then
+            echo "Player $1 WINS!!!"
+            play -qV0 sounds/win.ogg
+            exit 0
+        fi
+    done
+}
+
+check_dependancies
+check_dependancies rolldice
+#get terminal width
+columns=$(tput cols)
+#find out how many players there are
+if [ $# -gt 1 ] ; then
+    echo "Usage: $0 or $0 number of players."
+    exit 1
+fi
+if [ $# -eq 1 ] ; then
+    if ! [[ "$1" =~ ^[0-9]+$ ]] ; then
+        echo "The number of players must be a number, 2 or greater."
+        exit 1
+    fi
+    if [ $1 -lt 2 ] ; then
+        echo "The number of players must be a number, 2 or greater."
+        exit 1
+    fi
+    totalPlayers=$1
+else
+    totalPlayers=2
+    cpu=true
+fi
+initialize_players $totalPlayers
+#determine who goes first.
+playerIndex=$(rolldice 1d${#player[@]})
+while [ $playerIndex -gt 0 ] ; do
+    score_keeper $playerIndex
+    let playerIndex++
+    if [ $playerIndex -gt ${#player[@]} ] ; then
+        playerIndex=1
+    fi
+done
+exit 0

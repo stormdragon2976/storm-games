@@ -1,0 +1,75 @@
+#!/bin/bash
+
+check_dependancies()
+{
+    if [ $# -eq 0 ] ; then
+        if [[ $(bash --version | head -n 1 | cut -f 1 -d "." | tr -d "[:alpha:]") < "4" ]] ; then
+            echo "This game requires bash version 4 or higher. Earlier versions may not be able to successfully run this code."
+        fi
+        if ! hash sox &> /dev/null ; then
+            echo "The program sox is required but does not appear to be installed on your system. Please install sox and try again."
+            exit 1
+        fi
+    fi
+    for i in $@ ; do
+        if ! hash $i &> /dev/null ; then
+            echo "The program $i is required but does not appear to be installed on your system. Please install $i and try again."
+            exit 1
+        fi
+    done
+}
+
+initializer()
+{
+    tries=0
+    numberString="$(shuf -e 1 2 3 4 5 6 7 8 9 | tr -d "[:space:]")"
+}
+
+check_dependancies
+initializer
+while [ $numberString -ne 123456789 ] ; do
+    read -n 1 -p "$numberString " number
+    if [ "$number" == "Q" ] ; then
+        echo
+        exit 0
+    fi
+    if ! [[ "$number" =~ ^[0-9]+$ ]] ; then
+        unset number
+    fi
+    if [ "$number" == "0" ] ; then
+        unset number
+    fi
+    echo
+    if [ "$number" != "" ] ; then
+        i=0
+        while [ ${numberString:$i:1} -ne $number ] ; do
+            let i++
+        done
+        newNumberString=$(echo ${numberString:$i:9} | rev)
+        numberString=${numberString:0:$i}$newNumberString
+        let tries++
+        play -nqV0 synth .05 tri C2:C7 norm -7
+    else
+        play -qV0 "|sox -n -p synth saw E2 fade 0 0.25 0.05" "|sox -n -p synth saw E2 fade 0 0.25 0.05" norm -7
+    fi
+done
+if [ -f ".numnastics-score" ] ; then
+    oldHighScore=$(cat .numnastics-score | tr -d "[:alpha:][:cntrl:][:punct:][:space:]")
+else
+    oldHighScore=0
+fi
+echo "Congratulations! You win with $tries moves."
+if [ $oldHighScore -ne 0 ] ; then
+    echo " The record is $oldHighScore."
+fi
+if [ $tries -lt $oldHighScore -o $oldHighScore -eq 0 ] ; then
+    echo "$tries" > .numnastics-score
+    read -n 1 -p "You have set a new record! Would you like to post this score to Twitter using TTYtter? " answer
+    if [ "${answer^}" == "Y" ] ; then
+        check_dependancies ttytter
+        ttytter -readline=0 -silent -status="I just beat #numnastics in $tries moves! $(if [ $oldHighScore -ne 0 ] ; then echo "This is $(($oldHighScore - $tries)) fewer moves than my previous record!";fi)" &> /dev/null &
+    fi
+fi
+play -qV0 sounds/win.ogg
+echo
+exit 0
