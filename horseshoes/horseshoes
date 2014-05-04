@@ -26,7 +26,7 @@ get_cpu_name()
 local getCpuNameVariable=$1
 local continue="false"
 while [ "$continue" == "false" ] ; do
-local cpuName=$(shuf -n 1 -e "Alicia" "Alonzo" "Anthony" "Billy" "Burt" "Cayden" "Dorothy" "Draken" "Dave" "Ember" "Jeremy" "Kendell" "Kyle" "Storm" "Tux")
+local cpuName=$(shuf -n 1 -e "Alicia" "Alonzo" "Anaya" "Andrew" "Anthony" "Billy" "Burt" "Cayden" "Dorothy" "Draken" "Dave" "Ember" "Faye" "Jeremy" "Kendell" "Kyle" "Labesia" "Storm" "Terence" "Tux" "Tyler")
 if [ "${player[1]^}" != "${cpuName^}" ] ; then
 local continue="true"
 fi
