@@ -63,7 +63,7 @@ local hit=$2
 local i=0
 local j=$(($distance / 7))
 while [ $i -lt $j ] ; do
-play -qV0 sounds/throw.ogg norm -$i
+play -qV0 sounds/throw.ogg norm -$(($i * 2))
 let i++
 done
 play -qV0 sounds/$hit.ogg
