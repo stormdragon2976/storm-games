@@ -138,12 +138,16 @@ fi
 fi
 echo "Welcome to horseshoes."
 if [ "$1" != "c" ] ; then
+while [ -z "${player[1]}" ] ; do
 read -p "Player 1, please enter your name: " player[1]
+done
 else
 player[1]="$(get_cpu_name)"
 fi
 if [[ "$1" =~ 2 ]] ; then
+while [ -z "${player[2]}" ] ; do
 read -p "Player 2, please enter your name: " player[2]
+done
 vsCpu="false"
 else
 player[2]="$(get_cpu_name)"
