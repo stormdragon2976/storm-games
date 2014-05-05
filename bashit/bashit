@@ -1,0 +1,134 @@
+#!/bin/bash
+
+play_stop_bgm()
+{
+if [ "$1" == "play" ] ; then
+play -qV0 $2/bgm.ogg repeat 9999&
+__bgmPID="$(echo "$!")"
+elif [ "$1" == "stop" ] ; then
+if [[ "$__bgmPID" =~ ^[0-9]+$ ]] ; then
+kill $__bgmPID
+unset __bgmPID
+fi
+fi
+}
+
+select_soundpack()
+{
+local __soundPackVariable=$1
+local i=1
+for x in sounds/* ; do
+if [ -d "$x" ] ; then
+local soundPackList[$i]="$x"
+if [ $i -lt 10 ] ; then
+echo -n "0"
+fi
+echo "$i: $(basename "$x")"
+let i++
+fi
+done
+local continue="false"
+while [ "$continue" == "false" ] ; do
+local continue="true"
+read -p "Select a soundpack: " soundpack
+if ! [[ "$soundpack" =~ ^[0-9]+$ ]] ; then
+local continue="false"
+else
+if ! [[ "$soundpack" =~ [1-9]+$ ]] ; then
+local continue="false"
+fi
+if [ $soundpack -lt 1 -o $soundpack -gt $(($i - 1)) ] ; then
+local continue="false"
+fi
+fi
+done
+if [[ $__soundPackVariable ]] ; then
+eval $__soundPackVariable="'${soundPackList[$soundpack]}'"
+else
+echo "${soundPackList[$soundPack]}"
+fi
+}
+
+play_bopit_direction()
+{
+local soundpack=$1
+local __directionVariable=$2
+direction="$(shuf -n 1 -e "center" "left" "right")"
+case "$direction" in
+"center")
+play -qV0 $(shuf -n 1 -e $soundpack/cpu*ogg) remix v0.9 v0.9&
+;;
+"left")
+play -qV0 $(shuf -n 1 -e $soundpack/cpu*ogg) remix v0.9 v0.1&
+;;
+"right")
+play -qV0 $(shuf -n 1 -e $soundpack/cpu*ogg) remix v0.1 v0.9&
+;;
+esac
+if [[ $__directionVariable ]] ; then
+eval $__directionVariable="'$direction'"
+else
+echo "$direction"
+fi
+}
+
+#Main Game Loop
+select_soundpack sound
+speed="1.50"
+continue="true"
+if [ -f "$sound/intro.ogg" ] ; then
+play -qV0 $sound/intro.ogg
+else
+echo "Ready"
+echo
+sleep 1
+echo "set"
+echo
+sleep 1
+echo "go"
+fi
+play_stop_bgm play $sound
+difficultyIndex=0
+score=0
+while [ "$continue" == "true" ] ; do
+if [ $difficultyIndex -ge 2 ] ; then
+difficultyIndex=0
+if [ "$speed" != "0.01" ] ; then
+speed="$(echo "scale=2;$speed - .01" | bc)"
+fi
+fi
+play_bopit_direction $sound bopDirection
+read -st $speed -n 1 key
+case "${key^}" in
+"J")
+key="left"
+;;
+"K")
+key="center"
+;;
+"L")
+key="right"
+;;
+esac
+if [ "$key" != "$bopDirection" ] ; then
+continue="false"
+else
+let score++
+case "$key" in
+"center")
+play -qV0 $(shuf -n 1 -e $sound/player*ogg) remix v0.9 v0.9
+;;
+"left")
+play -qV0 $(shuf -n 1 -e $sound/player*ogg) remix v0.9 v0.1
+;;
+"right")
+play -qV0 $(shuf -n 1 -e $sound/player*ogg) remix v0.1 v0.9
+;;
+esac
+fi
+let difficultyIndex++
+done
+play_stop_bgm stop
+echo
+echo "Score: $score."
+exit 0
