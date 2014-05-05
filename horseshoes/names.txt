@@ -1,4 +1,5 @@
 Alicia
+April
 Alonzo
 Anaya
 Andrew
@@ -11,11 +12,16 @@ Draken
 Dave"
 "Ember
 Faye
+Janet
+Jeniffer
 Jeremy
 Kendell
 Kyle
 Labesia
+Rebecca
+Scott
 Storm
 Terence
 Tux
 Tyler
+Victoria
