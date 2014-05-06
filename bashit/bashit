@@ -1,5 +1,73 @@
 #!/bin/bash
 
+show_scoreboard()
+{
+local boardName=".$(basename "$0").scoreboard"
+if [ -f "$boardName" ] ; then
+clear
+echo -e "\nHigh Scores\n"
+cat $boardName
+local continue
+read -n 1 -p "Press any key to continue: " continue
+echo ""
+fi
+}
+
+high_score()
+{
+local boardName=".$(basename "$0").scoreboard"
+local newHighScore=0
+local i=1
+if [ ! -f "$boardName" ] ; then
+local newHighScore=1
+while [ $i -le 10 ] ; do
+local score[$i]="0 anonymous"
+let i++
+done
+else
+while IFS=$'\n' read line ; do
+local score[$i]="$line"
+local oldScore=$(echo "${score[$i]}" | cut -d ' ' -f 1)
+if [ $1 -gt $oldScore -a $newHighScore == 0 ] ; then
+local newHighScore=$i
+fi
+let i++
+done < $boardName
+fi
+if [ $newHighScore -gt 0 ] ; then
+local continue="n"
+echo "Congratulations! You beat the score at position $newHighScore!"
+while [ "${continue^}" != "Y" ] ; do
+read -p "Enter your name: " name
+if [ -z "$name" ] ; then
+local name="Anonymous"
+fi
+read -n 1 -p "is $name correct? " continue
+done
+if [ $newHighScore -eq 1 ] ; then
+read -n 1 -p "Post this score using TTYtter? " continue
+if [ "${continue^}" == "Y" ] ; then
+ttytter -readline=0 -silent -status="I just got first place in #$0 on my local scoreboard with $1 points! #storm-games" &> /dev/null&
+echo "Score posted."
+fi
+fi
+i=11
+while [ $i -gt $newHighScore ] ; do
+score[$i]="${score[$(echo "$i - 1" | bc)]}"
+let i--
+done
+local name="$(echo "${name^}" | tr " " "_")"
+local score[$newHighScore]="$1 $name"
+local i=1
+local scoreBoard=""
+while [ $i -le 10 ] ; do
+local scoreBoard="${scoreBoard}${score[$i]}\n"
+let i++
+done
+echo -e "${scoreBoard:0:-2}" > $boardName
+fi
+}
+
 show_instructions()
 {
 cat << EOF
@@ -159,4 +227,6 @@ play -qV0 $(shuf -n 1 -e $sound/lose*ogg)
 fi
 echo
 echo "Score: $score."
+high_score $score
+show_scoreboard
 exit 0
