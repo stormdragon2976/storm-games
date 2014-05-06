@@ -82,7 +82,7 @@ elif [ $x -ge 50 ] ; then
 local stepper="--"
 fi
 let x$stepper
-play --no-dither --single-threaded -nq synth 0.03 tri $(($x *50))&
+play --no-dither -nq synth 0.03 tri $(($x *50))&
 read -st 0.03 -n 1 continue
 done
 if [[ $__strength_bar_result ]] ; then
@@ -110,7 +110,7 @@ local rStepper="--"
 fi
 let lChan$lStepper
 let rChan$rStepper
-play --no-dither --single-threaded -nq synth 0.05 tri 300 remix v0.$lChan v0.$rChan&
+play --no-dither -nq synth 0.05 tri 300 remix v0.$lChan v0.$rChan&
 read -st 0.05 -n 1 continue
 done
 if [ $lChan -ge 5 ] ; then
