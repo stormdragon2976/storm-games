@@ -83,8 +83,10 @@ EOF
 play_stop_bgm()
 {
 if [ "$1" == "play" ] ; then
+if [ -f "$2/bgm.ogg" ] ; then
 play -qV0 $2/bgm.ogg repeat 9999&
 __bgmPID="$(echo "$!")"
+fi
 elif [ "$1" == "stop" ] ; then
 if [[ "$__bgmPID" =~ ^[0-9]+$ ]] ; then
 kill $__bgmPID
