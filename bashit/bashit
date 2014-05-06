@@ -1,5 +1,17 @@
 #!/bin/bash
 
+show_instructions()
+{
+cat << EOF
+To play, first choose the number of the sound pack you want.
+When the game starts, use iether s or j for the left, d or k for the center, or l or f for the right.
+To add sound packs, add a directory with the name of the soundpack under the sounds directory.
+cpu and player.ogg sounds should be aprox .25 seconds in linkgth. Reward and lose sounds are optional.
+Background sounds are optional too.
+
+EOF
+}
+
 play_stop_bgm()
 {
 if [ "$1" == "play" ] ; then
@@ -73,6 +85,14 @@ fi
 }
 
 #Main Game Loop
+while [ -z "$answer" ] ; do
+read -n 1 -p "Would you like instructions? " answer
+if [ "${answer^}" == "Y" ] ; then
+show_instructions
+read -n 1 -p "Press any key to continue. " answer
+fi
+done
+clear
 select_soundpack sound
 speed="1.50"
 continue="true"
@@ -100,13 +120,13 @@ fi
 play_bopit_direction $sound bopDirection
 read -st $speed -n 1 key
 case "${key^}" in
-"J")
+"S" | "J")
 key="left"
 ;;
-"K")
+"D" | "K")
 key="center"
 ;;
-"L")
+"F" | "L")
 key="right"
 ;;
 esac
@@ -125,10 +145,18 @@ play -qV0 $(shuf -n 1 -e $sound/player*ogg) remix v0.9 v0.1
 play -qV0 $(shuf -n 1 -e $sound/player*ogg) remix v0.1 v0.9
 ;;
 esac
+if [ $(($score % 15)) -eq 0 ] ; then
+if [ -f "$sound/reward.ogg" ] ; then
+play -qV0 $(shuf -n 1 -e $sound/reward*ogg)
+fi
+fi
 fi
 let difficultyIndex++
 done
 play_stop_bgm stop
+if [ -f "$sound/lose.ogg" ] ; then
+play -qV0 $(shuf -n 1 -e $sound/lose*ogg)
+fi
 echo
 echo "Score: $score."
 exit 0
