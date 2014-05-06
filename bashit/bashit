@@ -38,7 +38,7 @@ if [ $newHighScore -gt 0 ] ; then
 local continue="n"
 echo "Congratulations! You beat the score at position $newHighScore!"
 while [ "${continue^}" != "Y" ] ; do
-read -p "Enter your name: " name
+read -ep "Enter your name: " name
 if [ -z "$name" ] ; then
 local name="Anonymous"
 fi
@@ -160,6 +160,8 @@ show_instructions
 read -n 1 -p "Press any key to continue. " answer
 fi
 done
+gameLoop="true"
+while [ "$gameLoop" == "true" ] ; do
 clear
 select_soundpack sound
 speed="1.50"
@@ -229,4 +231,10 @@ echo
 echo "Score: $score."
 high_score $score
 show_scoreboard
+read -n 1 -p "Play again? " answer
+echo
+if [ "${answer^}" != "Y" ] ; then
+gameLoop="false"
+fi
+done
 exit 0
