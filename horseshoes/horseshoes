@@ -232,6 +232,13 @@ play -qV0 sounds/win.ogg
 read -n 1 -p "Play again? " answer
 if [ "${answer^}" != "Y" ] ; then
 gameLoop="false"
+else
+if [ "$1" == "c" ] ; then
+player[1]="$(get_cpu_name)"
+fi
+if [ "$vsCpu" == "true" ] ; then
+player[2]="$(get_cpu_name)"
+fi
 fi
 done
 exit 0
