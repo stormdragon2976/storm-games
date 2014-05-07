@@ -59,14 +59,23 @@ again."
 play_throw()
 {
 local distance=$1
-local hit=$2
+local direction=$2
+local hit=$3
+local lChan=9
+local rChan=9
 local i=0
 local j=$(($distance / 7))
 while [ $i -lt $j ] ; do
-play -qV0 sounds/throw.ogg norm -$(($i * 2))
+if [ $direction -gt 6 -a $lChan -gt 1 ] ; then
+let lChan--
+fi
+if [ $direction -lt 4 -a $rChan -gt 1 ] ; then
+let rChan--
+fi
+play -qV0 sounds/throw.ogg remix v0.$lChan v0.$rChan norm -$(($i * 2))
 let i++
 done
-play -qV0 sounds/$hit.ogg
+play -qV0 sounds/$hit.ogg remix v0.$lChan v0.$rChan
 }
 
 strength_bar()
@@ -204,7 +213,7 @@ if [ $distance -ge 45 ] ; then
 msg="${msg}${player[$playerCounter]} threw long."
 hitSound="miss"
 fi
-play_throw $distance $hitSound
+play_throw $distance $direction $hitSound
 echo "$msg"
 echo "score:  ${player[1]} ${score[1]} -- ${player[2]} ${score[2]}"
 echo
