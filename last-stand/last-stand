@@ -1,0 +1,233 @@
+#!/bin/bash
+
+speak_verses()
+{
+#name is first argument, voice is second.
+local name="$1"
+local voice="$2"
+echo "Verses $name..."
+espeak -v en-us -a 200 "Verses" &> /dev/null
+espeak -v $voice -a 200 "$name" &> /dev/null
+}
+
+play_intro()
+{
+local introLength="$(soxi sounds/intro.ogg | grep Duration | cut -d ':' -f2- | cut -d '=' -f1 | sed -e 's/00://g')"
+play -qV0 sounds/intro.ogg&
+local soundPID=$(echo "$!")
+local continue=""
+read -n 1 -t $introLength continue
+if [ -n "$continue" ] ; then
+kill $soundPID
+sleep .5
+fi
+}
+
+generate_enemy()
+{
+local __cpuInfo=$1
+local level=$2
+local hitpoints=$(($level * 5))
+if [ $hitpoints -gt 25 ] ; then
+local hitpoints=25
+fi
+if [ $level -gt 8 ] ; then
+local defence=8
+else 
+local defence=$level
+fi
+if [ $level -gt 5 ] ; then
+local precision=5
+else 
+local precision=$level
+fi
+local name="$(shuf -n 1 names.txt)"
+local voice="$(shuf -n 1 -e "en-sc" "en-us+m1" "en-us+m2" "en-us+m" "en-us+m4" "en-us+m5" "en-us+m6" "en-us+m7")"
+# returns name:hitpoints:defence:precision:voice
+local info="$name:$hitpoints:$defence:$precision:$voice"
+if [[ $__cpuInfo ]] ; then
+eval $__cpuInfo="'$info'"
+else
+echo "$info"
+fi
+}
+
+show_instructions()
+{
+local continue=""
+cat << EOF
+You are Wolfgang the warrior. Mighty in Odin's army, you and your brothers have faught off invasion after invasion.
+Now, however, the greatest foe you have ever faught has broken your army, and hounds the warriors as they retreatthrough the mountains.
+But now, a chance has been given to your force. One person must stay in a high narrow pass, 
+and that person must hold off the army persuing you long enough for your brothers to escape and regroup. So, as you take your position in the pass,  you know your time remaining on Midgard is short.
+Your task is important, for should you fail, Ragnarok itself may be brought upon us all.
+Controls:
+s, j: attack left
+d, k: attack center
+e, i: attack up
+f, l: attack right
+qw, r, a, g, h,u, o, z, v, m .: Catch bonus
+EOF
+}
+
+play_stop_bgm()
+{
+if [ "$1" == "play" ] ; then
+if [ -f "$2/bgm.ogg" ] ; then
+play -qV0 $2/bgm.ogg repeat 9999&
+__bgmPID="$(echo "$!")"
+fi
+elif [ "$1" == "stop" ] ; then
+if [[ "$__bgmPID" =~ ^[0-9]+$ ]] ; then
+kill $__bgmPID
+unset __bgmPID
+fi
+fi
+}
+
+play_attack()
+{
+local __directionVariable=$1
+local precision=$2
+direction="$(shuf -n 1 -e "center" "left" "right" "up")"
+bonusCheck=$(rolldice 1d10)
+if [ $bonusCheck -eq 10 -a "$direction" != "up" ] ; then
+local bonus="true"
+local sound="bonus"
+else
+local bonus="false"
+local sound="cpu_attack"
+fi
+case "$direction" in
+"center")
+play -qV0 $(shuf -n 1 -e sounds/$sound*ogg) remix v0.9 v0.9&
+;;
+"up")
+play -qV0 $(shuf -n 1 -e sounds/jump*ogg) remix v0.9 v0.9&
+;;
+"left")
+play -qV0 $(shuf -n 1 -e sounds/$sound*ogg) remix v0.9 v0.$precision&
+;;
+"right")
+play -qV0 $(shuf -n 1 -e sounds/$sound*ogg) remix v0.$precision v0.9&
+;;
+esac
+if [[ $__directionVariable ]] ; then
+eval $__directionVariable="'$bonus:$direction'"
+else
+echo "$bonus:$direction"
+fi
+}
+
+#Main Game Loop
+while [ -z "$answer" ] ; do
+read -n 1 -p "Would you like instructions? " answer
+if [ "${answer^}" == "Y" ] ; then
+show_instructions
+read -n 1 -p "Press any key to continue. " answer
+fi
+done
+play_intro
+gameLoop="true"
+while [ "$gameLoop" == "true" ] ; do
+clear
+speed="1.00"
+continue="true"
+play -qV0 $sound/intro.ogg
+play_stop_bgm play sounds/
+level=1
+oldLevel=1
+playerHitpoints=3
+generate_enemy cpuInfo $level
+cpuName="$(echo "$cpuInfo" | cut -d ':' -f 1)"
+cpuHitpoints="$(echo "$cpuInfo" | cut -d ':' -f 2)"
+cpuDefence="$(echo "$cpuInfo" | cut -d ':' -f 3)"
+cpuPrecision="$(echo "$cpuInfo" | cut -d ':' -f 4)"
+cpuVoice="$(echo "$cpuInfo" | cut -d ':' -f 5)"
+speak_verses "$cpuName" $cpuVoice
+while [ $playerHitpoints -gt 0 ] ; do
+if [ $level -ne $oldLevel ] ; then
+oldLevel=$level
+if [ "$speed" != "0.01" ] ; then
+speed="$(echo "scale=2;$speed - .01" | bc)"
+fi
+fi
+play_attack attackInfo $cpuPrecision
+bonus="$(echo "$attackInfo" | cut -d ':' -f1)"
+attackDirection="$(echo "$attackInfo" | cut -d ':' -f2)"
+read -st $speed -n 1 -p "$attackDirection" key
+case "${key^}" in
+"S" | "J")
+key="left"
+;;
+"D" | "K")
+key="center"
+;;
+"F" | "L")
+key="right"
+;;
+"E" | "I")
+key="up"
+;;
+"W" | "R" | "A" | "G" | "Z" | "C" | "V" | "U" | "O" | "M" | "," | ".")
+key="bonus"
+;;
+esac
+if [ "$bonus" == "true" -a "$key" == "bonus" ] ; then
+playerSound="player_bonus"
+else
+if [ "$key" != "$attackDirection" ] ; then
+let playerHitpoints--
+echo "$playerHitpoints"
+playerSound="player_hit"
+else
+playerAttack=$(rolldice 1d10)
+if [ $playerAttack -gt $cpuDefence ] ; then
+let cpuHitpoints--
+playerSound="hit_cpu"
+if [ $cpuHitpoints -le 0 ] ; then
+let level++
+generate_enemy cpuInfo $level
+cpuName="$(echo "$cpuInfo" | cut -d ':' -f 1)"
+cpuHitpoints="$(echo "$cpuInfo" | cut -d ':' -f 2)"
+cpuDefence="$(echo "$cpuInfo" | cut -d ':' -f 3)"
+cpuPrecision="$(echo "$cpuInfo" | cut -d ':' -f 4)"
+cpuVoice="$(echo "$cpuInfo" | cut -d ':' -f 5)"
+speak_verses "$cpuName" $cpuVoice
+fi
+else
+playerSound="blocked"
+fi
+fi
+fi
+case "$key" in
+"bonus" | "center" | "up")
+play -qV0 $(shuf -n 1 -e sounds/$playerSound*ogg) remix v0.9 v0.9
+;;
+"left")
+play -qV0 $(shuf -n 1 -e sounds/$playerSound*ogg) remix v0.9 v0.$cpuPrecision
+;;
+"right")
+play -qV0 $(shuf -n 1 -e sounds/$playerSound*ogg) remix v0.$cpuPrecision v0.9
+;;
+esac
+if [ "$bonus" == "true" ] ; then
+if [ "$key" == "bonus" ] ; then
+let playerHitpoints++
+fi
+fi
+bonus="false"
+key=""
+done
+play_stop_bgm stop
+if [ -f "$sound/lose.ogg" ] ; then
+play -qV0 $(shuf -n 1 -e $sound/lose*ogg)
+fi
+echo
+read -n 1 -p "Play again? " answer
+echo
+if [ "${answer^}" != "Y" ] ; then
+gameLoop="false"
+fi
+done
+exit 0
