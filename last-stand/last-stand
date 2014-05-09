@@ -194,6 +194,7 @@ cpuDefence="$(echo "$cpuInfo" | cut -d ':' -f 3)"
 cpuPrecision="$(echo "$cpuInfo" | cut -d ':' -f 4)"
 cpuVoice="$(echo "$cpuInfo" | cut -d ':' -f 5)"
 speak_verses "$cpuName" $cpuVoice
+key=""
 fi
 else
 playerSound="blocked"
