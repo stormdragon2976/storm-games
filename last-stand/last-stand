@@ -1,5 +1,25 @@
 #!/bin/bash
 
+finish_cpu()
+{
+play -qV0 sounds/finish_cpu.ogg&
+local key=""
+local sound=cpu_fall
+read -sn 4 -t 3 key
+case "$key" in
+"jiki" | "sede")
+local sound="chopper"
+;;
+"kijl" | "desf")
+local sound="breaker"
+;;
+"kkik" | "dded")
+local sound="king_of_the_hill"
+;;
+esac
+play -qV0 sounds/$sound.ogg
+}
+
 speak_verses()
 {
 #name is first argument, voice is second.
@@ -155,7 +175,7 @@ fi
 play_attack attackInfo $cpuPrecision
 bonus="$(echo "$attackInfo" | cut -d ':' -f1)"
 attackDirection="$(echo "$attackInfo" | cut -d ':' -f2)"
-read -st $speed -n 1 -p "$attackDirection" key
+read -st $speed -n 1 key
 case "${key^}" in
 "S" | "J")
 key="left"
@@ -186,6 +206,7 @@ if [ $playerAttack -gt $cpuDefence ] ; then
 let cpuHitpoints--
 playerSound="hit_cpu"
 if [ $cpuHitpoints -le 0 ] ; then
+finish_cpu
 let level++
 generate_enemy cpuInfo $level
 cpuName="$(echo "$cpuInfo" | cut -d ':' -f 1)"
