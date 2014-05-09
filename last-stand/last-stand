@@ -13,8 +13,11 @@ local sound="chopper"
 "kijl" | "desf")
 local sound="breaker"
 ;;
-"kkik" | "dded")
+"lijk" | "fesd")
 local sound="king_of_the_hill"
+;;
+"kill" | "deff")
+local sound="blood_eagle"
 ;;
 esac
 play -qV0 sounds/$sound.ogg
@@ -242,8 +245,8 @@ bonus="false"
 key=""
 done
 play_stop_bgm stop
-if [ -f "$sound/lose.ogg" ] ; then
-play -qV0 $(shuf -n 1 -e $sound/lose*ogg)
+if [ -f "sounds/lose.ogg" ] ; then
+play -qV0 $(shuf -n 1 -e sounds/lose*ogg)
 fi
 echo
 read -n 1 -p "Play again? " answer
