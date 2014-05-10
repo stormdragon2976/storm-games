@@ -64,10 +64,19 @@ local precision=5
 else 
 local precision=$level
 fi
+if [ $level -le 3 ] ; then
+local speed="1"
+elif [ $level -le 5 ] ; then
+local speed="0.8"
+elif [ $level -le 8 ] ; then
+local speed="0.5"
+else
+local speed="0.5"
+fi
 local name="$(shuf -n 1 names.txt)"
 local voice="$(shuf -n 1 -e "en-sc" "en-us+m1" "en-us+m2" "en-us+m" "en-us+m4" "en-us+m5" "en-us+m6" "en-us+m7")"
-# returns name:hitpoints:defence:precision:voice
-local info="$name:$hitpoints:$defence:$precision:$voice"
+# returns name:hitpoints:defence:precision:voice:speed
+local info="$name:$hitpoints:$defence:$precision:$voice:$speed"
 if [[ $__cpuInfo ]] ; then
 eval $__cpuInfo="'$info'"
 else
@@ -115,8 +124,8 @@ local precision=$2
 direction="$(shuf -n 1 -e "center" "left" "right" "up")"
 bonusCheck=$(rolldice 1d10)
 if [ $bonusCheck -eq 10 -a "$direction" != "up" ] ; then
-local bonus="true"
-local sound="bonus"
+local bonus="$(shuf -n 1 -e "heal" "chicken")"
+local sound="cpu_bonus_$bonus"
 else
 local bonus="false"
 local sound="cpu_attack"
@@ -168,6 +177,7 @@ cpuDefence="$(echo "$cpuInfo" | cut -d ':' -f 3)"
 cpuPrecision="$(echo "$cpuInfo" | cut -d ':' -f 4)"
 cpuVoice="$(echo "$cpuInfo" | cut -d ':' -f 5)"
 speak_verses "$cpuName" $cpuVoice
+slain=0
 while [ $playerHitpoints -gt 0 ] ; do
 if [ $level -ne $oldLevel ] ; then
 oldLevel=$level
@@ -196,7 +206,7 @@ key="up"
 key="bonus"
 ;;
 esac
-if [ "$bonus" == "true" -a "$key" == "bonus" ] ; then
+if [ "$bonus" != "false" -a "$key" == "bonus" ] ; then
 playerSound="player_bonus"
 else
 if [ "$key" != "$attackDirection" ] ; then
@@ -210,6 +220,7 @@ let cpuHitpoints--
 playerSound="hit_cpu"
 if [ $cpuHitpoints -le 0 ] ; then
 finish_cpu
+let slain++
 let level++
 generate_enemy cpuInfo $level
 cpuName="$(echo "$cpuInfo" | cut -d ':' -f 1)"
@@ -217,6 +228,7 @@ cpuHitpoints="$(echo "$cpuInfo" | cut -d ':' -f 2)"
 cpuDefence="$(echo "$cpuInfo" | cut -d ':' -f 3)"
 cpuPrecision="$(echo "$cpuInfo" | cut -d ':' -f 4)"
 cpuVoice="$(echo "$cpuInfo" | cut -d ':' -f 5)"
+speed="$(echo "$cpuInfo" | cut -d ':' -f 6)"
 speak_verses "$cpuName" $cpuVoice
 key=""
 fi
@@ -236,9 +248,13 @@ play -qV0 $(shuf -n 1 -e sounds/$playerSound*ogg) remix v0.9 v0.$cpuPrecision
 play -qV0 $(shuf -n 1 -e sounds/$playerSound*ogg) remix v0.$cpuPrecision v0.9
 ;;
 esac
-if [ "$bonus" == "true" ] ; then
+if [ "$bonus" != "false" ] ; then
 if [ "$key" == "bonus" ] ; then
+if [ "$bonus" == "heal" ] ; then
 let playerHitpoints++
+elif [ "$bonus" == "chicken" ] ; then
+playerHitpoints=$(($playerHitpoints + 3))
+fi
 fi
 fi
 bonus="false"
@@ -249,6 +265,14 @@ if [ -f "sounds/lose.ogg" ] ; then
 play -qV0 $(shuf -n 1 -e sounds/lose*ogg)
 fi
 echo
+echo "before falling in battle to $cpuName, you slew $slain enmies."
+if [ $slain -lt 3 ] ; then
+echo "You have dishonored Thor's name and brought shame upon yourself."
+elif [ $slain -le 6 ] ; then
+echo "Thor is proud to have you among Valhalla's warriors"
+else
+echo "Bards through out the ages shall sing your praises. Rest in piece mighty warrior, your runestone shall be great in deed."
+fi
 read -n 1 -p "Play again? " answer
 echo
 if [ "${answer^}" != "Y" ] ; then
