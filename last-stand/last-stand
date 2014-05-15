@@ -66,10 +66,8 @@ local precision=$level
 fi
 if [ $level -le 3 ] ; then
 local speed="1"
-elif [ $level -le 5 ] ; then
-local speed="0.8"
 elif [ $level -le 8 ] ; then
-local speed="0.5"
+local speed="0.8"
 else
 local speed="0.5"
 fi
