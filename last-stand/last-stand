@@ -104,7 +104,7 @@ play_stop_bgm()
 {
 if [ "$1" == "play" ] ; then
 if [ -f "$2/bgm.ogg" ] ; then
-play -qV0 $2/bgm.ogg repeat 9999&
+play -qV0 $(shuf -n 1 -e $2/bgm*ogg) repeat 9999&
 __bgmPID="$(echo "$!")"
 fi
 elif [ "$1" == "stop" ] ; then
@@ -164,7 +164,7 @@ clear
 speed="1.00"
 continue="true"
 play -qV0 $sound/intro.ogg
-play_stop_bgm play sounds/
+play_stop_bgm play sounds
 level=1
 oldLevel=1
 playerHitpoints=3
@@ -220,6 +220,7 @@ if [ $cpuHitpoints -le 0 ] ; then
 finish_cpu
 let slain++
 let level++
+play_stop_bgm stop
 generate_enemy cpuInfo $level
 cpuName="$(echo "$cpuInfo" | cut -d ':' -f 1)"
 cpuHitpoints="$(echo "$cpuInfo" | cut -d ':' -f 2)"
@@ -229,6 +230,8 @@ cpuVoice="$(echo "$cpuInfo" | cut -d ':' -f 5)"
 speed="$(echo "$cpuInfo" | cut -d ':' -f 6)"
 speak_verses "$cpuName" $cpuVoice
 key=""
+sleep 0.5
+play_stop_bgm play sounds
 fi
 else
 playerSound="blocked"
