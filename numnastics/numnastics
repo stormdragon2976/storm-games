@@ -64,10 +64,10 @@ if [ $oldHighScore -ne 0 ] ; then
 fi
 if [ $tries -lt $oldHighScore -o $oldHighScore -eq 0 ] ; then
     echo "$tries" > .numnastics-score
-    read -n 1 -p "You have set a new record! Would you like to post this score to Twitter using TTYtter? " answer
+    read -n 1 -p "You have set a new record! Would you like to post this score to GNU Social? " answer
     if [ "${answer^}" == "Y" ] ; then
-        check_dependancies ttytter
-        ttytter -readline=0 -silent -status="I just beat #numnastics in $tries moves! $(if [ $oldHighScore -ne 0 ] ; then echo "This is $(($oldHighScore - $tries)) fewer moves than my previous record!";fi)" &> /dev/null &
+        read -p "Enter your webfinger, e.g. storm@social.stormdragon.tk: " answer
+        curl --connect-timeout 60 -s -u "${answer%@*}" -d status="I just beat #numnastics in $tries moves! $(if [ $oldHighScore -ne 0 ] ; then echo "This is $(($oldHighScore - $tries)) fewer moves than my previous record of ${oldHighScore}!";fi)" -d source="Numnastics" https://${answer#*@}/api/statuses/update.xml &> /dev/null&
     fi
 fi
 play -qV0 sounds/win.ogg
