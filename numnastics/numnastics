@@ -3,7 +3,7 @@
 check_dependancies()
 {
     if [ $# -eq 0 ] ; then
-        if [[ $(bash --version | head -n 1 | cut -f 1 -d "." | tr -d "[:alpha:]") < "4" ]] ; then
+        if [[ $(bash --version | head -n 1 | cut -f 1 -d "." | tr -cd "[:digit:]") < "4" ]] ; then
             echo "This game requires bash version 4 or higher. Earlier versions may not be able to successfully run this code."
         fi
         if ! hash sox &> /dev/null ; then
@@ -67,7 +67,7 @@ if [ $tries -lt $oldHighScore -o $oldHighScore -eq 0 ] ; then
     read -n 1 -p "You have set a new record! Would you like to post this score to GNU Social? " answer
     if [ "${answer^}" == "Y" ] ; then
         read -p "Enter your webfinger, e.g. storm@social.stormdragon.tk: " answer
-        curl --connect-timeout 60 -s -u "${answer%@*}" -d status="I just beat #numnastics in $tries moves! $(if [ $oldHighScore -ne 0 ] ; then echo "This is $(($oldHighScore - $tries)) fewer moves than my previous record of ${oldHighScore}!";fi)" -d source="Numnastics" https://${answer#*@}/api/statuses/update.xml &> /dev/null&
+        curl --connect-timeout 60 -s -u "${answer%@*}" -d status="I just beat #numnastics in ${tries} moves! $(if [ $oldHighScore -ne 0 ] ; then echo "This is $(($oldHighScore - $tries)) fewer moves than my previous record of ${oldHighScore}!";fi)" -d source="Numnastics" https://${answer#*@}/api/statuses/update.xml | grep '^  <text>' | sed -e 's/^  <text>//' -e 's/<\/text>$//'
     fi
 fi
 play -qV0 sounds/win.ogg
