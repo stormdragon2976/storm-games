@@ -67,7 +67,7 @@ if [ $tries -lt $oldHighScore -o $oldHighScore -eq 0 ] ; then
     read -n 1 -p "You have set a new record! Would you like to post this score to GNU Social? " answer
     if [ "${answer^}" == "Y" ] ; then
         read -p "Enter your webfinger, e.g. storm@social.stormdragon.tk: " answer
-        curl --connect-timeout 60 -s -u "${answer%@*}" -d status="I just beat #numnastics in ${tries} moves! $(if [ $oldHighScore -ne 0 ] ; then echo "This is $(($oldHighScore - $tries)) fewer moves than my previous record of ${oldHighScore}!";fi)" -d source="Numnastics" https://${answer#*@}/api/statuses/update.xml | grep '^  <text>' | sed -e 's/^  <text>//' -e 's/<\/text>$//'
+        curl --connect-timeout 60 -s -u "${answer%@*}" -d status="I just beat #numnastics in ${tries} moves! $(if [ $oldHighScore -ne 0 ] ; then echo "This is $(($oldHighScore - $tries)) fewer moves than my previous record of ${oldHighScore}!";fi) Wanna play? http://github.com/stormdragon2976/storm-games" -d source="Numnastics" https://${answer#*@}/api/statuses/update.xml | grep '^  <text>' | sed -e 's/^  <text>//' -e 's/<\/text>$//'
     fi
 fi
 play -qV0 sounds/win.ogg
