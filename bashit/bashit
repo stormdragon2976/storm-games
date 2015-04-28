@@ -48,7 +48,7 @@ if [ $newHighScore -le 5 ] ; then
 read -n 1 -p "Post this score to GNU Social? " answer
 if [ "${answer^}" = "Y" ] ; then
 read -p "Enter your webfinger, e.g. storm@social.stormdragon.tk: " answer
-result="$(curl --connect-timeout 60 -s -u "${answer%@*}" -d status="I just got the number $newHighScore position in #${0##*/} on my local scoreboard with $1 points using the ${sound##*/} soundpack! #storm-games" -d source="${0##/*}" https://${answer#*@}/api/statuses/update.xml | grep '^  <text>' | sed -e 's/^  <text>//' -e 's/<\/text>$//')"
+result="$(curl --connect-timeout 60 -s -u "${answer%@*}" -d status="I just got the number $newHighScore position in #${0##*/} on my local scoreboard with $1 points using the ${sound##*/} soundpack! Wanna play? http://github.com/stormdragon2976/storm-games #storm-games" -d source="${0##/*}" https://${answer#*@}/api/statuses/update.xml | grep '^  <text>' | sed -e 's/^  <text>//' -e 's/<\/text>$//')"
 echo "$result"
 fi
 fi
