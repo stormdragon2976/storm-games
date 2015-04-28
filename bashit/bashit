@@ -44,11 +44,12 @@ local name="Anonymous"
 fi
 read -n 1 -p "is $name correct? " continue
 done
-if [ $newHighScore -eq 1 ] ; then
-read -n 1 -p "Post this score using TTYtter? " continue
-if [ "${continue^}" == "Y" ] ; then
-ttytter -readline=0 -silent -status="I just got first place in #$0 on my local scoreboard with $1 points! #storm-games" &> /dev/null&
-echo "Score posted."
+if [ $newHighScore -le 5 ] ; then
+read -n 1 -p "Post this score to GNU Social? " answer
+if [ "${answer^}" = "Y" ] ; then
+read -p "Enter your webfinger, e.g. storm@social.stormdragon.tk: " answer
+result="$(curl --connect-timeout 60 -s -u "${answer%@*}" -d status="I just got the number $newHighScore position in #${0##*/} on my local scoreboard with $1 points using the ${sound##*/} soundpack! #storm-games" -d source="${0##/*}" https://${answer#*@}/api/statuses/update.xml | grep '^  <text>' | sed -e 's/^  <text>//' -e 's/<\/text>$//')"
+echo "$result"
 fi
 fi
 i=11
@@ -166,7 +167,7 @@ gameLoop="true"
 while [ "$gameLoop" == "true" ] ; do
 clear
 select_soundpack sound
-speed="1.50"
+speed="1.00"
 continue="true"
 if [ -f "$sound/intro.ogg" ] ; then
 play -qV0 $sound/intro.ogg
