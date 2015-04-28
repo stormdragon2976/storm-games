@@ -108,10 +108,11 @@ fi
 read -n 1 -p "is $name correct? " continue
 done
 if [ $newHighScore -eq 1 ] ; then
-read -n 1 -p "Post this score using TTYtter? " continue
-if [ "${continue^}" == "Y" ] ; then
-ttytter -readline=0 -silent -status="I just shot a $amo $distance feet and now hold the 1st place position on my local scoreboard! #CritterCannon" &> /dev/null&
-echo "Score posted."
+read -n 1 -p "Post this score to GNU Social? " answer
+if [ "${answer^}" == "Y" ] ; then
+read -p "Enter your webfinger, e.g. storm@social.stormdragon.tk: " answer
+result="$(curl --connect-timeout 60 -s -u "${answer%@*}" -d status="I just got the number $newHighScore position in #${0##*/} on my local scoreboard! I $message Wanna play? http://github.com/stormdragon2976/storm-games #storm-games" -d source="${0##/*}" https://${answer#*@}/api/statuses/update.xml | grep '^  <text>' | sed -e 's/^  <text>//' -e 's/<\/text>$//')"
+echo "$result"
 fi
 fi
 i=11
@@ -183,25 +184,26 @@ points=$(echo "$points + 25" | bc)
 break
 esac
 done
-echo "You shot a $amo $distance feet. "
+message="shot a $amo $distance feet. "
 if [ $dynamite -ne 1 ] ; then
-echo -n "The $amo hit $dynamite sticks of dynamite, "
+message="${message}The $amo hit $dynamite sticks of dynamite, "
 else
-echo -n "The $amo hit $dynamite stick of dynamite, "
+message="${message}The $amo hit $dynamite stick of dynamite, "
 fi
 if [ $ground -ne 1 ] ; then
-echo -n "landed on the ground $ground times, "
+message="${message}landed on the ground $ground times, "
 else
-echo -n "landed on the ground $ground time, "
+message="${message}landed on the ground $ground time, "
 fi
-echo -n "and "
+message="${message}and "
 if [ $trampoline -ne 1 ] ; then
-echo "bounced on $trampoline trampolines."
+message="${message}bounced on $trampoline trampolines. "
 else
-echo "bounced on $trampoline trampoline."
+message="${message}bounced on $trampoline trampoline. "
 fi
-echo "The $amo	was killed when $sex landed on $lastTerrain."
-echo "Your score for this shot was $points points."
+message="${message}The $amo	was killed when $sex landed on $lastTerrain. "
+message="${message}Total score for this shot was $points points."
+echo "You $message"
 high_score $distance
 echo -e "\nHigh Scores"
 i=1
