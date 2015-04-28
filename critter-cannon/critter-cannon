@@ -107,7 +107,7 @@ name="Anonymous"
 fi
 read -n 1 -p "is $name correct? " continue
 done
-if [ $newHighScore -eq 1 ] ; then
+if [ $newHighScore -le 5 ] ; then
 read -n 1 -p "Post this score to GNU Social? " answer
 if [ "${answer^}" == "Y" ] ; then
 read -p "Enter your webfinger, e.g. storm@social.stormdragon.tk: " answer
