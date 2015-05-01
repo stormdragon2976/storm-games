@@ -274,6 +274,14 @@ echo "Thor is proud to have you among Valhalla's warriors"
 else
 echo "Bards through out the ages shall sing your praises. Rest in piece mighty warrior, your runestone shall be great in deed."
 fi
+if [ $slain -gt 3 ]; then
+read -n 1 -p "Post this score to GNU Social? " answer
+if [ "${answer^}" = "Y" ] ; then
+read -p "Enter your webfinger, e.g. storm@social.stormdragon.tk: " answer
+result="$(curl --connect-timeout 60 -s -u "${answer%@*}" -d status="Before falling in battle to ${cpuName} I slew $slain enemies! $(if [ $slain -lt 6 ]; then echo -n "Thor is proud to have me among Valhalla's warriors."; else echo -n "Bards through out the ages shall sing my praises, my runestone shall be great in deed!";fi) I made my #${0##*/}! Wanna play? http://github.com/stormdragon2976/storm-games #storm-games" -d source="${0##/*}" https://${answer#*@}/api/statuses/update.xml | grep '^  <text>' | sed -e 's/^  <text>//' -e 's/<\/text>$//')"
+echo "$result"
+fi
+fi
 read -n 1 -p "Play again? " answer
 echo
 if [ "${answer^}" != "Y" ] ; then
