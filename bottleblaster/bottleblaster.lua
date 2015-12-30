@@ -69,8 +69,11 @@ local function play_sound(sound, channel, loop)
     sound:playChannel(channel, loop)
 end
 
--- I would rather get rid of this function and just have the one play function
-local function pan_sound(mixer, sound)
+local function play_at_location(sound, xPosition, yPosition)
+    channel = channel or -1
+    loop = loop or 0
+    xPosition = xPosition or 0
+    yPosition = yPosition or 0
     mixer.SetPanning(-1, 255, 127)
     sound:playChannel(-1, 0)
 end
@@ -145,7 +148,9 @@ while running do
                 keyName = "0"
             elseif tonumber(keyName) >= 1 and tonumber(keyName) <= 5 then
                 weapon = tonumber(keyName)
-                loaded = true
+                if weapon >= 3 then
+                    loaded = false
+                end
                 if weapon == 1 then
                     speak("pistal")
                 elseif weapon == 2 then
