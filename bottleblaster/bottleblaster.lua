@@ -78,10 +78,9 @@ end
 local function game_intro()
     local sound = trySDL(mixer.loadWAV, "sounds/game-intro.ogg")
 sound:playChannel(-1, 0)
-    -- It would be better if the SDL.delay could calculate the link of the intro sound and use that instead of 4 * 1000
-    -- while sound.sfxIsPlaying(-1) do
-        SDL.delay(5000)
-    -- end
+    while mixer.playing(-1) > 0 do
+        SDL.delay(100)
+    end
 end
 
 -- Game variables
