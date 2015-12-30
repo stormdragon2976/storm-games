@@ -113,15 +113,15 @@ while running do
     for e in SDL.pollEvent() do
         if e.type == SDL.event.KeyUp then --chrys just recognice the keyup and free the loop
             keyName = SDL.getKeyName(e.keysym.sym)
-            holdKey.keyName = false
+            holdKey[keyName] = false
             direction = ""
             -- speak(playerPosition)
         end
         if e.type == SDL.event.Quit then
             running = false
-        elseif e.type == SDL.event.KeyDown and not holdKey.keyName then -- chrysif not already down ( see below)
+        elseif e.type == SDL.event.KeyDown and not holdKey[keyName] then -- chrysif not already down ( see below)
             keyName = SDL.getKeyName(e.keysym.sym)
-            holdKey.keyName = true --chrys mark the remember the keydown
+            holdKey[keyName] = true --chrys mark the remember the keydown
             if keyName == "Q" then
                 running = exit_game(SDL, mixer)
             elseif keyName == "Left Shift" or keyName == "Right Shift" then
