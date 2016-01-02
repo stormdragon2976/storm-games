@@ -1,6 +1,24 @@
--- Speak with speech-dispatcher
+-- Store operating system commands in a variable.
+function os.capture(cmd, raw)
+    local f = assert(io.popen(cmd, 'r'))
+    local s = assert(f:read('*a'))
+    f:close()
+    if raw then
+        return s
+    end
+    s = string.gsub(s, '^%s+', '')
+    s = string.gsub(s, '%s+$', '')
+    s = string.gsub(s, '[\n\r]+', ' ')
+    return s
+end
+
+-- Speak with appropriate tool.
 local function speak(text)
-    os.execute('spd-say "' .. text .. '"')
+    if os.capture("uname") == "Linux" then
+        os.execute('spd-say "' .. text .. '"')
+    else
+        os.execute('say "' .. text .. '"')
+    end
 end
 
 -- Window related variables.
@@ -150,6 +168,8 @@ while running do
                 weapon = tonumber(keyName)
                 if weapon >= 3 then
                     loaded = false
+                else
+                    loaded = true
                 end
                 if weapon == 1 then
                     speak("pistal")
