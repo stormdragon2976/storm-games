@@ -16,8 +16,9 @@ def initialize_gui(gameTitle):
     # start the display (required by the event loop)
     pygame.display.set_mode((320, 200))
     pygame.display.set_caption(gameTitle)
-    # Load sounds from the sound directory and creates a dict like that {'bottle': 'bottle.ogg'}
-    soundFiles = {f.split('.')[0]:f for f in listdir(SoundFolder) if isfile(join(SoundFolder, f))}
-
-
-
+    # Load sounds from the sound directory and creates a list like that {'bottle': 'bottle.ogg'}
+    soundFiles = [f for f in listdir(SoundFolder) if isfile(join(SoundFolder, f)) and (f.split('.')[1].lower() == "ogg")]
+    #lets make a dict with pygame.mixer.Sound() objects {'bottle':<soundobject>}
+    soundData = {}
+    for f in soundFiles:
+        soundData[f.split('.')[0]] = pygame.mixer.Sound(SoundFolder + "/" + f)
