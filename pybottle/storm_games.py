@@ -1,6 +1,10 @@
+#!/bin/python
+# -*- coding: utf-8 -*-
 """Standard initializations and functions shared by all games."""
 
 import os
+from os import listdir
+from os.path import isfile, join
 import pygame
 import time
 
@@ -11,7 +15,6 @@ def initialize_gui(gameTitle):
     pygame.display.set_mode((320, 200))
     pygame.display.set_caption(gameTitle)
     # Load sounds from the sound directory
-    soundFileNames = next(os.walk("sounds/"))[2]
-    for i in soundFileNames:
-        if i[-4:] == ".ogg": i[:-4] = pygame.mixer.Sound("sounds/" + i)
+    onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+
 

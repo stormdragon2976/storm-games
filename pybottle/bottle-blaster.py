@@ -1,4 +1,5 @@
 #!/bin/python
+# -*- coding: utf-8 -*-
 # Shoot the bottles as fast as possible.
 
 from storm_games import *
