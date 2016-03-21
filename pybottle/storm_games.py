@@ -22,3 +22,4 @@ def initialize_gui(gameTitle):
     soundData = {}
     for f in soundFiles:
         soundData[f.split('.')[0]] = pygame.mixer.Sound("sounds/" + f)
+    return soundData
