@@ -49,25 +49,25 @@ def game_menu(*options):
             if event.key == pygame.K_DOWN and i < len(options) - 1: i = i + 1
             if event.key == pygame.K_UP and i > 0: i = i - 1
             if event.key == pygame.K_RETURN:
-                if isfunction(options[i]):
-                    speak(options[i] + "() is a function.")
-                    options[i]()
-                else:
-                    speak(options[i] + "() is not a function.")
+                try:
+                    eval(options[i] + "()")
+                    continue
+                except:
                     return options[i]
+                    continue
             speak(options[i])
         event = pygame.event.clear()
         time.sleep(0.001)
 
 def credits():
-    info = {
-        gameName + "brought to you by Storm Dragon",\
+    info = (
+        "Mine Racer: brought to you by Storm Dragon",\
         "Billy Wolfe, designer and coder.",\
         "http://stormdragon.tk",\
-        "Press escape or enter to return to the game menu."}
+        "Press escape or enter to return to the game menu.")
     i = 0
     speak(info[i])
-    while loop == True:
+    while True:
         event = pygame.event.wait()
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE or event.key == pygame.K_RETURN: return
