@@ -13,6 +13,7 @@ while True:
     # if the event is about a keyboard button that have been pressed...
     if event.type == pygame.KEYDOWN:
         sounds['bottle'].play(-1)
+        speak("This is a test.")
     if event.type == pygame.KEYUP:
         sounds['bottle'].stop()
         # and if the button is the "q" letter or the "escape" key...

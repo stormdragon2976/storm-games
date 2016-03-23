@@ -9,9 +9,7 @@ import pygame
 import speechd
 import time
 
-def __init__():
-    spd = speechd.Client()
-
+spd = speechd.Client()
 def speak(text, interupt = True):
     if interupt == True: spd.cancel()
     spd.say(text)
@@ -37,3 +35,20 @@ def initialize_gui(gameTitle):
     time.sleep(soundData['game-intro'].get_length())
     return soundData
 
+def game_menu(*options):
+    loop = True
+    pygame.mixer.music.load("sounds/music_menu.ogg")
+    pygame.mixer.music.play(-1)
+    i = 0
+    speak(options[i])
+    while loop == True:
+        event = pygame.event.wait()
+        if event.key == pygame.K_ESCAPE: exit_game()
+        if event.key == pygame.K_DOWN and i < len(options) - 1:
+            i = i + 1
+            speak(options[i])
+        if event.key == pygame.K_UP and i > 0:
+            i = i - 1
+            speak(options[i])
+        event = pygame.event.clear()
+        time.sleep(0.001)

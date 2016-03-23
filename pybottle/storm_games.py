@@ -2,13 +2,17 @@
 # -*- coding: utf-8 -*-
 """Standard initializations and functions shared by all games."""
 
+from espeak import espeak
 import os
 from os import listdir
 from os.path import isfile, join
 import pygame
 import time
 
-SoundFolder = 'sounds'
+def speak(text, interupt = True):
+    if interupt == True: espeak.cancel()
+    espeak.set_voice("en-us")
+    espeak.synth(text)
 
 def initialize_gui(gameTitle):
     # start pygame
