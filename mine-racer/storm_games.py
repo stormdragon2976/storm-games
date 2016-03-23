@@ -53,6 +53,8 @@ def game_menu(*options):
                     eval(options[i] + "()")
                     continue
                 except:
+                    pygame.mixer.music.fadeout(500)
+                    time.sleep(0.25)
                     return options[i]
                     continue
             speak(options[i])
