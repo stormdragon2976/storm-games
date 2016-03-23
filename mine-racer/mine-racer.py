@@ -8,7 +8,8 @@ mode = "menu"
 gameName = "Mine Racer"
 sounds = initialize_gui(gameName)
 
-# loop forever (until a break occurs)
+# Game starts at main menu
+mode = game_menu("start game", "credits", "exit")
 while True:
     # wait for an event
     event = pygame.event.wait()
