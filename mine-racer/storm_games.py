@@ -39,6 +39,7 @@ def initialize_gui(gameTitle):
 def game_menu(*options):
     loop = True
     pygame.mixer.music.load("sounds/music_menu.ogg")
+    pygame.mixer.music.set_volume(0.75)
     pygame.mixer.music.play(-1)
     i = 0
     speak(options[i])
@@ -53,7 +54,6 @@ def game_menu(*options):
                     eval(options[i] + "()")
                     continue
                 except:
-                    pygame.mixer.music.fadeout(500)
                     time.sleep(0.25)
                     return options[i]
                     continue

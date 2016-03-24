@@ -4,8 +4,9 @@
 from storm_games import *
 
 # Initial variable settings
+gameName = "Mine Racer"
 mode = "menu"
-sounds = initialize_gui("Mine Racer")
+sounds = initialize_gui(gameName)
 
 def game():
     pygame.mixer.music.load("sounds/music_car.ogg")
