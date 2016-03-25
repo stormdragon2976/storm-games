@@ -6,13 +6,11 @@ import os
 from os import listdir
 from os.path import isfile, join
 from inspect import isfunction
+from xdg import BaseDirectory
 import pygame
 import random
 import speechd
 import time
-
-def __init__():
-    random.seed()
 
 spd = speechd.Client()
 def speak(text, interupt = True):
@@ -25,6 +23,12 @@ def exit_game():
     exit()
 
 def initialize_gui(gameTitle):
+    # Check for, and possibly create, storm-games path    
+    global HOME
+    HOME = BaseDirectory.xdg_config_home + "/storm-games"
+    if not os.path.exists(HOME): os.makedirs(HOME)
+    # Seed the random generator to the clock
+    random.seed()
     # Set game's name
     global gameName
     gameName = gameTitle
