@@ -9,6 +9,7 @@ from inspect import isfunction
 from xdg import BaseDirectory
 import pygame
 import random
+import requests
 import speechd
 import time
 
@@ -25,8 +26,10 @@ def exit_game():
 def initialize_gui(gameTitle):
     # Check for, and possibly create, storm-games path    
     global HOME
+    global gamePath
     HOME = BaseDirectory.xdg_config_home + "/storm-games"
-    if not os.path.exists(HOME): os.makedirs(HOME)
+    gamePath = HOME + "/" + str.lower(str.replace(gameTitle, " ", "-"))
+    if not os.path.exists(gamePath): os.makedirs(gamePath)
     # Seed the random generator to the clock
     random.seed()
     # Set game's name
