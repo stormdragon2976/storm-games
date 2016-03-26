@@ -47,6 +47,23 @@ def initialize_gui(gameTitle):
     time.sleep(soundData['game-intro'].get_length())
     return soundData
 
+def display_message(info):
+    info.append("Press escape or enter to continue.")
+    info.reverse()
+    info.append("Use the up and down arrow keys to navigate this message.")
+    info.reverse()
+    i = 0
+    speak(str(info[0:len(info)]))
+    while True:
+        event = pygame.event.wait()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE or event.key == pygame.K_RETURN: return
+            if event.key == pygame.K_DOWN and i < len(info) - 1: i = i + 1
+            if event.key == pygame.K_UP and i > 0: i = i - 1
+            speak(info[i])
+        event = pygame.event.clear()
+        time.sleep(0.001)
+ 
 def instructions():
     info = (
         "Welcome to " + gameName + ": brought to you by Storm Dragon. Use the up and down arrows to navigate these instructions.",\

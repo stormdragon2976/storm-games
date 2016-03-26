@@ -9,6 +9,7 @@ sounds = initialize_gui("Numnastics")
 
 def game(mode):
     i = 0
+    startTime = time.time()
     tries = 0
     numberList = list("123456789")
     random.shuffle(numberList)
@@ -45,25 +46,19 @@ def game(mode):
             else:
                 i = -1
                 sounds['error'].play()
+    endTime = round(time.time() - startTime, 2)
+    message = [
+        "Congratulations! You beat Numnastics in " + str(tries) + " tries.",\
+        "Your time was " + str(endTime) + " seconds."]
+    display_message(message)
     sounds['win'].play()
-    speak("solved in " + str(tries) + " tries.")
+    time.sleep(sounds['win'].get_length())
     return "menu"
 
 # Game starts at main menu
 mode = game_menu("start game", "instructions", "credits", "exit_game")
 while True:
-    try:
-        if event.type == pygame.KEYDOWN:
-            # Escape is the back/exit key, close the game if not playing, or return to menu if playing.
-            if event.key == pygame.K_ESCAPE:
-                if mode != "menu": mode = "menu"
-                if mode == "menu": exit_game()
-            # Call the game menu, if needed.
-            if mode == "menu": mode = game_menu("start game", "instructions", "credits", "exit_game")
-            if mode == "start game": mode = game(mode)
-    except:
-        pass    
-# wait for an event
-    event = pygame.event.wait()
+    if mode == "menu": mode = game_menu("start game", "instructions", "credits", "exit_game")
+    if mode == "start game": mode = game(mode)
     time.sleep(.001)
 
