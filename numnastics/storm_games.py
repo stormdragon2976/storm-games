@@ -14,12 +14,17 @@ import requests
 import speechd
 import time
 
-config = configparser.ConfigParser()
+localConfig = configparser.ConfigParser()
+globalConfig = configparser.ConfigParser()
 spd = speechd.Client()
 
-#def write_config(config, path = gamePath + "/config"):
-    #with open(path, 'w') as configfile:
-        #config.write(configfile)
+def write_config(writeGlobal = False):
+    if writeGlobal == False:
+        with open(gamePath, 'w') as configfile:
+            localConfig.write(configfile)
+    else:
+        with open(globalPath, 'w') as configfile:
+            globalConfig.write(configfile)
 
 def speak(text, interupt = True):
     if interupt == True: spd.cancel()
@@ -32,10 +37,11 @@ def exit_game():
 
 def initialize_gui(gameTitle):
     # Check for, and possibly create, storm-games path    
-    global HOME
+    global globalPath
     global gamePath
-    HOME = BaseDirectory.xdg_config_home + "/storm-games"
-    gamePath = HOME + "/" + str.lower(str.replace(gameTitle, " ", "-"))
+    globalPath = BaseDirectory.xdg_config_home + "/storm-games"
+    gamePath = globalPath + "/" + str.lower(str.replace(gameTitle, " ", "-") + "config")
+    globalPath = globalPath + "/config"
     if not os.path.exists(gamePath): os.makedirs(gamePath)
     # Seed the random generator to the clock
     random.seed()
