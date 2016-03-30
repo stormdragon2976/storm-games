@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Standard initializations and functions shared by all games."""
 
+import configparser
 import os
 from os import listdir
 from os.path import isfile, join
@@ -13,7 +14,13 @@ import requests
 import speechd
 import time
 
+config = configparser.ConfigParser()
 spd = speechd.Client()
+
+#def write_config(config, path = gamePath + "/config"):
+    #with open(path, 'w') as configfile:
+        #config.write(configfile)
+
 def speak(text, interupt = True):
     if interupt == True: spd.cancel()
     spd.say(text)
@@ -72,6 +79,7 @@ def instructions():
         "Welcome to " + gameName + ": brought to you by Storm Dragon. Use the up and down arrows to navigate these instructions.",\
         "The object of the game is to arrange the random string of numbers so they read one through nine in as few tries as possible.",\
         "You can use the up or left arrow to move back in the string, and the down or right arrow to move forward, or close to the end of the string of numbers.",\
+        "you can also jump directly to the number you want by pressing it on your keyboard. If you want to go to the number 8 in the string, just press 8.",\
         "When you are on the number you want, press the enter key and that number, plus all the numbers to the end of the string, will be reversed.",\
         "For example, if you have the string of numbers 1 2 3 4 5 6 9 8 7, pressing enter while on the number 9 will reverse 9 8 7, making the string 1 2 3 4 5 6 7 8 9 and you will win the game.",\
         "If you need to her the string of numbers from your current position, press the spacebar.",\
