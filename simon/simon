@@ -9,7 +9,7 @@ continue=1
 while [ $continue -ne 0 ]; do
 # Play the pattern to match
 for i in ${pattern[@]} ; do
-play -q -n synth .5 ${notes[$i]} norm -9
+play -qV0 -n synth .5 ${notes[$i]} norm -9 &> /dev/null
 done
 # Loop to read the player's input and compare it to the pattern
 # Clear the player variable
@@ -23,7 +23,7 @@ key="$(echo "$key" | tr 'eu' '3')"
 player=(${player[@]} $key)
 # make sure the pressed key exists in the array.
 if [[ "$key" =~ [0-3] ]]; then
-play -q -n synth .5 ${notes[$key]} norm -9 &
+play -qV0 -n synth .5 ${notes[$key]} norm -9 & &> /dev/null
 fi
 # make sure the player pattern is the same as the computer generated one
 if [ "${player[$i]}" != "${pattern[$i]}" ]; then
