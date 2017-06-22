@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Thanks for playing.
+# Visit me at https://stormdragon.tk
+# Released under the terms of the WTFPL http://wtfpl.net
+# Follow me on GNU Social: https://social.stormdragon.tk/storm
+
+# Set the difficulty
+case "$1" in
+1)
+difficulty=0.25
+;;
+3)
+difficulty=0.1
+;;
+4)
+difficulty=0.08
+;;
+5)
+difficulty=0.05
+;;
+6)
+difficulty=0.02
+;;
+*)
+difficulty=0.2
+esac
+notes=("C4" "D4" "E4" "F4" "G4" "A4" "B4")
+length=$(($RANDOM % 15 + 5))
+i=0
+unset sequence
+while [ $i -lt $length ]; do
+sequence="${sequence}\"|sox -np synth 0.0$(($RANDOM % 5 + 4)) sq ${notes[$(($RANDOM % 6))]} pad $difficulty\" "
+((i++))
+done
+eval play -q ${sequence} norm -5
+sleep .5
+unset guess
+i=0
+while [ -z "${guess}" ]; do
+play -nqV0 synth .2 sq E4 pad .3 norm -5 &
+read -sn1 -t .6 guess
+((i++))
+done
+if [ $i -eq $length ]; then
+echo "you win!"
+else
+echo "you lose"
+echo "You guessed $i. the actual number was $length."
+fi
+exit 0
