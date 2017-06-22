@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Thanks for playing.
+# Visit me at https://stormdragon.tk
+# Released under the terms of the WTFPL http://wtfpl.net
+# Follow me on GNU Social: https://social.stormdragon.tk/storm
+
+# There are 2 sets of keybindings. uijk or erdf.
+# The lowest note is e or u, with r or i being the next highest.
+# Finally d or j follow by f and k for the ascending pitches.
+
 # Simon notes
 notes=("sq E4" "sq C#4" "sq A3" "sq E3")
 #Original note.
