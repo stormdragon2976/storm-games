@@ -8,6 +8,33 @@
 # There are 2 sets of keybindings. uijk or erdf.
 # The lowest note is e or u, with r or i being the next highest.
 # Finally d or j follow by f and k for the ascending pitches.
+# Note the arrow keys may also be used.
+# Down is lowest with left, then right, then up in order of pitch.
+
+get_key() {
+    # Arrow keys translate to upper case letters.
+    # Up arrow is A
+    # Down arrow is B
+    # Left arrow is D
+    local __key
+    local __lastKey
+    while [[ -z "$__key" && -z "$__lastKey" ]]; do
+        read -t 001 -rsn1 __key
+        while [[ "$__key" =~ [[:cntrl:][:punct:]] ]]; do
+            # Key may be an arrow or something else, so remove punct and cntrl characters and try again.
+            if [[ -n "$__key" ]]; then
+                __lastKey="$__key"
+            else
+                __key="$__lastKey"
+                break
+            fi
+            read -t 001 -rsn1 __key
+        done
+    done
+    # Return __key if it contains a letter.
+    # If it doesn't, then a punctuation key was pressed, so return __lastKey instead.
+    [[ -n "$__key" ]] && echo "$__key" || echo "$__lastKey"
+}
 
 # Simon notes
 notes=("sq E4" "sq C#4" "sq A3" "sq E3")
@@ -24,11 +51,12 @@ done
 # Clear the player variable
 unset player
 i=0
-while read -sn1 key ; do
-key="$(echo "$key" | tr 'fk' '0')"
-key="$(echo "$key" | tr 'dj' '1')"
-key="$(echo "$key" | tr 'ir' '2')"
-key="$(echo "$key" | tr 'eu' '3')"
+while : ; do
+key="$(get_key)"
+key="$(echo "$key" | tr 'Afk' '0')"
+key="$(echo "$key" | tr 'Cdj' '1')"
+key="$(echo "$key" | tr 'Dir' '2')"
+key="$(echo "$key" | tr 'Beu' '3')"
 player=(${player[@]} $key)
 # make sure the pressed key exists in the array.
 if [[ "$key" =~ [0-3] ]]; then
