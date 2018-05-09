@@ -37,11 +37,14 @@ eval play -q ${sequence} norm -5
 sleep .5
 unset guess
 i=0
+ifs="$IFS"
+unset IFS
 while [ -z "${guess}" ]; do
 play -nqV0 synth .2 sq E4 pad .3 norm -5 &
-read -sn1 -t .6 guess
+read -sn1 -t .6 guess && guess=" "
 ((i++))
 done
+IFS="$ifs"
 if [ $i -eq $length ]; then
 echo "you win!"
 else
