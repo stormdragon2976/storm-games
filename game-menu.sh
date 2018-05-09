@@ -8,7 +8,7 @@ path="${path%/*}"
 declare -A gameList
 for i in $path/*/ ; do
 i="${i::-1}"
-gameList[${i##*/}]="$i"
+gameList[${i##*/}]="${i}"
 done
 gameList[exit]="Exit"
 while : ; do
@@ -19,7 +19,8 @@ echo "$i"
 echo '|'
 done) --stdout)"
 if [[ "$game" != "exit" && -n "$game" ]]; then
-eval "${gameList[$game]}"
+cd "${gameList[$game]}"
+./$game""
 else
 break
 fi
