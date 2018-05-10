@@ -43,7 +43,7 @@ read -sn1 -t .6 guess || guess="win"
 ((i++))
 done
 if [ $i -eq $length ]; then
-echo "you win!"
+echo "you win! The answer was $length!"
 else
 echo "you lose"
 echo "You guessed $i. the actual number was $length."
