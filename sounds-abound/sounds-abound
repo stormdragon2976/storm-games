@@ -35,11 +35,11 @@ sequence="${sequence}\"|sox -np synth 0.0$(($RANDOM % 5 + 4)) sq ${notes[$(($RAN
 done
 eval play -q ${sequence} norm -5
 sleep .5
-unset guess
+guess="win"
 i=0
-while [ -z "${guess}" ]; do
+while [[ "${guess}" == "win" ]]; do
 play -nqV0 synth .2 sq E4 pad .3 norm -5 &
-read -sn1 -t .6 guess
+read -sn1 -t .6 guess || guess="win"
 ((i++))
 done
 if [ $i -eq $length ]; then
