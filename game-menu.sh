@@ -21,6 +21,8 @@ done) --stdout)"
 if [[ "$game" != "exit" && -n "$game" ]]; then
 cd "${gameList[$game]}"
 ./$game""
+echo
+read -n1 -p "Press any key to continue" continue
 else
 break
 fi

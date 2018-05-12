@@ -255,6 +255,9 @@ noteLength="0.75"
 ;;
 "=")
 noteLength="1.00"
+;;
+$'\e')
+exit 0
 esac
 if [ "$instrument" == "12" ] ; then
 play -qn -V0 synth pl ${note}$(($octave + 1)) pl ${note}${octave} delay 0 0.02 remix - $effect fade 0 $noteLength vol $volume &> /dev/null &
